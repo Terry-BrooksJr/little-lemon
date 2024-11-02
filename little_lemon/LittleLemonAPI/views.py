@@ -2,11 +2,11 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import filters
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView 
 from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem
-from LittleLemonAPI.serializers import MenuItemSerializer, UserSerializer, CartSerializer
+from LittleLemonAPI.serializers import MenuItemSerializer, UserSerializer, CartSerializer, OrderSerializer
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from django_filters.rest_framework import DjangoFilterBackend
 from django.forms.models import model_to_dict
-from  rest_framework.status import HTTP_403_FORBIDDEN, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_422_UNPROCESSABLE_ENTITY, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST
+from  rest_framework.status import HTTP_403_FORBIDDEN, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_422_UNPROCESSABLE_ENTITY, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST,HTTP_405_METHOD_NOT_ALLOWED
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
@@ -200,11 +200,82 @@ class CartManagement(RetrieveUpdateDestroyAPIView):
         
 
     def delete(self, request):
-        try:
-            user = User.objects.get(username=self.request.user.username)
-            carts = Cart.objects.filter(user=user)
-            for cart in carts:
-                cart.delete()
-            return Response(data=f"{user.username}'s cart has been cleared", status=HTTP_200_OK)
-        except Exception as e:
-            pass
+        user = User.objects.get(username=self.request.user.username)
+        carts = Cart.objects.filter(user=user)
+        for cart in carts:
+            cart.delete()
+        return Response(data=f"{user.username}'s cart has been cleared", status=HTTP_200_OK)
+        
+
+
+
+
+class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+    lookup_field = 'order_id'
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['status', 'date', 'delivery_crew', 'user']
+    search_fields = ["order_is", "user"]
+    
+    def get(self, request):
+        if request.user.groups.filter(name="manager").exists():
+            return Response(data=Order.objects.all(),status=HTTP_200_OK) 
+        elif request.user.groups.filter(name="delivery crew").exists():
+            return  Response(data=Order.objects.filter(delivery_crew=request.user), status=HTTP_200_OK)
+        else:
+            return Response(data=Order.objects.filter(user=request.user),status=HTTP_200_OK)
+        
+    def post(self,request):
+        if request.user.groups.filter(name="manager").exists():
+            return Response(data="Method Not Allowed", status=HTTP_405_METHOD_NOT_ALLOWED)
+        elif request.user.groups.filter(name="delivery crew").exists():
+            return Response(data="Method Not Allowed", status=HTTP_405_METHOD_NOT_ALLOWED)
+        else:
+            try:
+                if len(carts := Cart.objects.filter(user=self.request.user)) <= 0:
+                    return Response(data="No Items In Cart", status=HTTP_400_BAD_REQUEST)
+                total = sum(cart.price for cart in list(carts))
+                new_order = Order.objects.create(
+                    user=self.request.user,
+                    total=total
+                ).save()
+                for cart in carts:
+                    order_item = OrderItem.objects.create(
+                        order=new_order.order_id,
+                        menuitem=MenuItem.objects.get(item_id=cart.menuitem.item_id),
+                        quantity=cart.quantity,
+                        unit_price=cart.unit_price,
+                        price=cart.price
+                    ).save()
+                    cart.delete()
+                return Response(data=f" Successfully Created {new_order.order_id}",status=HTTP_201_CREATED)
+            except Exception as e:
+                return Response(data=f"Error:{str(e)}", status=HTTP_400_BAD_REQUEST)
+        
+    def patch(self, request, order_id):
+        order = get_object_or_404(Order,order_id=order_id)
+        if request.user.groups.filter(name="manager").exists():            
+            if request.data['status']:
+                order.status = request.data['status']
+            if not request.data['delivery_crew']:
+                return Response(data="POST body must contain either 'status' or 'delivery_crew' keys", status=HTTP_400_BAD_REQUEST)
+            order.delivery_crew = User.objects.get(id=request.data['delivery_crew'].id)
+
+            order.save()
+            return Response(status=HTTP_204_NO_CONTENT)
+        elif request.user.groups.filter(name="delivery crew").exists():                
+            if request.data['status']:
+                order.status = request.data['status']
+                order.save()
+                return Response(status=HTTP_204_NO_CONTENT)
+            else:
+                return Response(data="POST body must contain either 'status' key", status=HTTP_400_BAD_REQUEST)
+
+        else:
+            return super().patch()
+
+
+
+

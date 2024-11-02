@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer, SerializerMethodField
-from LittleLemonAPI.models import MenuItem, Cart
+from LittleLemonAPI.models import MenuItem, Cart, Order
 from django.contrib.auth.models import User, Group
 
 class MenuItemSerializer(ModelSerializer):
@@ -39,7 +39,11 @@ class CartSerializer(ModelSerializer):
         model = Cart
         fields = ['menuitem', 'quantity', 'user_id', 'price']
 
-        
+
+class OrderSerializer(ModelSerializer):
+    class Meta:
+        model = Order
+        fields = "__all__"
     # def to_representation(self, instance):
     #     representation = super().to_representation(instance)
     #     all_cart_items = []
