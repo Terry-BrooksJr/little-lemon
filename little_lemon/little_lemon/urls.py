@@ -18,10 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 import LittleLemonAPI.urls
+from LittleLemonAPI.urls import api_root
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path('', include('django_prometheus.urls')),
     re_path(r"^api/", include(LittleLemonAPI.urls)),
     re_path(r'', include('djoser.urls.authtoken')),
+    re_path(r'^$', api_root, name='API-Root')
 
 
 

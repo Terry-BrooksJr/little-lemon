@@ -29,9 +29,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "cacheops",
     "drf_redesign",
     "rest_framework",
     "rest_framework.authtoken",
+    "django_prometheus",
     "django_filters", 
     "djoser",
     "django_seed",
@@ -41,6 +43,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    "django.middleware.cache.UpdateCacheMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -48,6 +52,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.middleware.cache.FetchFromCacheMiddleware",
+    'django_prometheus.middleware.PrometheusAfterMiddleware',
+
 ]
 
 ROOT_URLCONF = "little_lemon.urls"
@@ -72,8 +79,9 @@ WSGI_APPLICATION = "little_lemon.wsgi.application"
 
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
-        "rest_framework.renderers.BrowsableAPIRenderer",
         "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+
     ],
     "DEFAULT_PARSER_CLASSES": [
         "rest_framework.parsers.JSONParser",
@@ -82,15 +90,15 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication", #TODO - DELETE BEFORE SUBMISSION
-        "rest_framework.authentication.BasicAuthentication",  #TODO - DELETE BEFORE SUBMISSION
+        # "rest_framework.authentication.SessionAuthentication", #TODO - DELETE BEFORE SUBMISSION
+        # "rest_framework.authentication.BasicAuthentication",  #TODO - DELETE BEFORE SUBMISSION
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"anon": "100/day", "user": "500/day"},
+    "DEFAULT_THROTTLE_RATES": {"anon": "4/minute", "user": "12/minute"},
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 25,
 }
@@ -100,7 +108,7 @@ REST_FRAMEWORK = {
 
 DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
+            "ENGINE": "django_prometheus.db.backends.postgresql",
             "NAME": os.getenv("POSTGRES_DB"),
             "USER": os.getenv("POSTGRES_USER"),
             "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
@@ -112,6 +120,25 @@ DATABASES = {
  
     }
         }
+}
+CACHEOPS_REDIS = f'redis://{os.getenv('CACHE_USER')}:{os.getenv('CACHE_PASSWORD')}@{os.getenv('CACHE_HOST')}:{os.getenv('CACHE_PORT')}/{os.getenv('CACHE_DB')}'
+CACHEOPS_CLIENT_CLASS = 'django_prometheus.cache.backends.redis.RedisCache'
+
+CACHES = {
+    "default": {
+        "BACKEND": CACHEOPS_CLIENT_CLASS,
+        "LOCATION": CACHEOPS_REDIS,
+    }
+}
+
+CACHEOPS_DEFAULTS = {
+    'timeout': 60*60
+}
+CACHEOPS = {
+    'auth.user': {'ops': 'get', 'timeout': 60*15},
+    'auth.*': {'ops': ('fetch', 'get')},
+    'auth.permission': {'ops': 'all'},
+    'LittleLemonAPI.*': {},
 }
 
 # Password validation

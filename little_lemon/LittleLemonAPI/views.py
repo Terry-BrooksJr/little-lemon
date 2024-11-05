@@ -11,9 +11,27 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
-
+from djoser.permissions import CurrentUserOrAdminOrReadOnly
 from django.contrib.auth.models import Group, User
+from html import unescape
+
+
 class MenuItemsListView(ListCreateAPIView):
+    """View for listing and creating menu items.
+
+    This view allows authenticated users to list all menu items and enables managers to create new menu items. It supports filtering and searching based on specific fields.
+
+    Args:
+        request: The HTTP request object.
+        *args: Additional positional arguments.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        Response: A response object containing the list of menu items or the result of the creation operation.
+
+    Raises:
+        HTTP_403_FORBIDDEN: If a non-manager user attempts to create a menu item.
+    """
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -23,42 +41,72 @@ class MenuItemsListView(ListCreateAPIView):
 
 
     def create(self, request, *args, **kwargs):
+        """Create a new menu item if the user is a manager.
+            Reason For Method Overload: 
+                To Limit Creation of Objects to the Manager Role.
+
+        This method checks if the requesting user belongs to the "manager" group before allowing the creation of a new menu item. If the user is not a manager, a forbidden response is returned.
+
+        Args:
+            request: The HTTP request object.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            Response: A response object indicating the result of the creation operation.
+
+        Raises:
+            HTTP_403_FORBIDDEN: If the user is not a manager.
+        """
+        
         if request.user.groups.filter(name="manager").exists():
-            return super().create(request, *args, **kwargs)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+            try:
+                return super().create(request, *args, **kwargs)
+            except (IntegrityError, TypeError, KeyError) as e:
+                return Response({"error": "Unable to Add Menu Item", "reason": str(e)},status=HTTP_400_BAD_REQUEST)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
 
 class MenuItemDetailView(RetrieveUpdateDestroyAPIView):
+    """View for retrieving, updating, and deleting menu items.
+
+    This view provides functionality to manage individual menu items, allowing authenticated users to retrieve details, while restricting updates and deletions to users in the "manager" group. It also supports partial updates and permission checks for each operation.
+
+    Args:
+        request: The HTTP request object.
+        *args: Additional positional arguments.
+        **kwargs: Additional keyword arguments.
+
+    Returns:
+        Response: A response object containing the menu item data or the result of the update or delete operation.
+
+    Raises:
+        HTTP_403_FORBIDDEN: If a non-manager user attempts to update or delete a menu item.
+    """
     serializer_class = MenuItemSerializer
+    queryset = MenuItem.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['title']
+    lookup_field = "item_id"
 
 
-    def get_object(self):
-        try:
-            obj =   MenuItem.objects.get(item_id=self.kwargs['item_id'])
-            self.check_object_permissions(self.request, obj)
-            return obj
-        except ObjectDoesNotExist:
-            return None
-    
     def update(self, request, *args, **kwargs):
         if request.user.groups.filter(name="manager").exists():
             return super().update(request, *args, **kwargs)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
     
 
     def destroy(self, request, *args, **kwargs):
         if request.user.groups.filter(name="manager").exists():
             return super().destroy(request, *args, **kwargs)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
 
 
     def partial_update(self, request, *args, **kwargs):
         if request.user.groups.filter(name="manager").exists():
             return super().partial_update(request, *args, **kwargs)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
-
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
+ 
 
 class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     queryset = User.objects.all()
@@ -73,26 +121,26 @@ class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIVi
             try:
                 if username := request.data['username']:
                     user = get_object_or_404(User, username=username)
-                    managers = Group.objects.get(name="managers")
+                    managers = Group.objects.get(name="manager")
                     managers.user_set.add(user)
-                    return Response(data=f"{user.username} has been added to the manager group and the accounts permissions have been updated to reflect the change.", status=HTTP_201_CREATED)
-            except KeyError:
-                return Response(data='Post body must have key "username"', status=HTTP_422_UNPROCESSABLE_ENTITY)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+                    return Response(data={"response":f"{user.username} has been added to the manager group and the accounts permissions have been updated to reflect the change."}, status=HTTP_201_CREATED)
+            except KeyError as e:
+                return Response(data={'error':'POST body incomplete must have key "username"', "reason":str(e)},status=HTTP_400_BAD_REQUEST)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
     def delete(self, request, id):
         if request.user.groups.filter(name="manager").exists():
             try:
                 user = get_object_or_404(User, id=id)
                 managers = Group.objects.get(name="manager")
                 managers.user_set.remove(user)
-                return Response(f"{user.username} has been removed to the manager group and the accounts permissions have been updated to reflect the change.", status=HTTP_200_OK)
-            except KeyError:
-                return Response(data='URL must have a path parameter for the targeted employee id', status=HTTP_422_UNPROCESSABLE_ENTITY)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+                return  Response({'response':f"{user.username} has been removed to the manager group and the accounts permissions have been updated to reflect the change."}, status=HTTP_200_OK)
+            except KeyError as e:
+                return Response(data={'error':'URL must have a path parameter for the targeted employee id', 'reason':str(e)}, status=HTTP_400_BAD_REQUEST)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
         
     def get(self, request):
         if not request.user.groups.filter(name="manager").exists():
-            return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+            return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
         users = User.objects.all()
         manager_group_members = []
         for user in users:
@@ -100,7 +148,7 @@ class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIVi
                 user = UserSerializer(user).data
                 manager_group_members.append(user)
 
-        return Response(data=manager_group_members, status=HTTP_200_OK)
+        return Response(data={'manager':manager_group_members}, status=HTTP_200_OK)
     
 class DeliveryCrewUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     queryset = User.objects.all()
@@ -116,12 +164,12 @@ class DeliveryCrewUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreate
             try:
                 if username := request.data['username']:
                     user = get_object_or_404(User, username=username)
-                    managers = Group.objects.get(name="delivery crew")
-                    managers.user_set.add(user)
-                    return Response(data=f"{user.username} has been added to the manager group and the accounts permissions have been updated to reflect the change.", status=HTTP_201_CREATED)
-            except KeyError:
-                return Response(data='Post body must have key "username"', status=HTTP_422_UNPROCESSABLE_ENTITY)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+                    delivery_staff = Group.objects.get(name="delivery crew")
+                    delivery_staff.user_set.add(user)
+                    return Response(data={'response' : f"{user.username} has been added to the manager group and the accounts permissions have been updated to reflect the change."}, status=HTTP_201_CREATED)
+            except KeyError as e:
+                return Response(data={'error':'Post body must have key "username"', 'reason': str(e)}, status=HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
 
     def delete(self, request, id):
         if request.user.groups.filter(name="manager").exists():
@@ -129,23 +177,23 @@ class DeliveryCrewUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreate
                 user = get_object_or_404(User, id=id)
                 managers = Group.objects.get(name="delivery crew")
                 managers.user_set.remove(user)
-                return Response(f"{user.username} has been removed to the manager group and the accounts permissions have been updated to reflect the change.", status=
+                return Response({"response":f"{user.username} has been removed to the manager group and the accounts permissions have been updated to reflect the change."}, status=
                                 HTTP_200_OK)
             except KeyError:
-                return Response(data='URL must have a path parameter for the targeted employee id', status=HTTP_422_UNPROCESSABLE_ENTITY)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+                return Response(data={'error':'URL must have a path parameter for the targeted employee id'}, status=HTTP_400_BAD_REQUEST)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
     
     def get(self, request):
         if request.user.groups.filter(name="manager").exists():    
             users = User.objects.all()
-            manager_group_members = []
+            delivery_group_members = []
             for user in users:
                 if user.groups.filter(name="delivery crew").exists():
                     user = UserSerializer(user).data
-                    manager_group_members.append(user)
+                    delivery_group_members.append(user)
 
-            return Response(data=manager_group_members, status=HTTP_200_OK)
-        return Response(data="Action Restricted to Managers Only", status=HTTP_403_FORBIDDEN)
+            return Response(data={"delivery_personnel":delivery_group_members}, status=HTTP_200_OK)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
     
 
 
@@ -188,15 +236,15 @@ class CartManagement(RetrieveUpdateDestroyAPIView):
                             menuitem=item,
                             quantity=quantity,
                             unit_price=unit_price,
-                            price=float(unit_price)*float(quantity)
+                            price=round(float(unit_price)*float(quantity),2)
                             ).save()
-                return Response(data=f"{quantity} {item.title}s been added to {user.username}'s cart", status=HTTP_201_CREATED)
+                return Response(data={"response" : f"{quantity} {item.title}s been added to {user.username}'s cart"}, status=HTTP_201_CREATED)
         except KeyError:
-                return Response(data='Post body must have keys "quantity", "item_id", ', status=HTTP_422_UNPROCESSABLE_ENTITY)
+                return Response(data={'error': 'Post body must have keys "quantity", "item_id"','reason':str(e)},  status=HTTP_400_BAD_REQUEST)
         except MenuItem.DoesNotExist:
-            return Response(data='Item does not exist', status=HTTP_404_NOT_FOUND)
+            return Response(data={'error':'Item does not exist','reason':str(e)}, status=HTTP_404_NOT_FOUND)
         except IntegrityError as e:
-            return Response(data='Item already in cart', status=HTTP_400_BAD_REQUEST)
+            return Response(data={'error':'Item already in cart', 'reason':unescape(str(e))}, status=HTTP_400_BAD_REQUEST)
         
 
     def delete(self, request):
@@ -204,7 +252,7 @@ class CartManagement(RetrieveUpdateDestroyAPIView):
         carts = Cart.objects.filter(user=user)
         for cart in carts:
             cart.delete()
-        return Response(data=f"{user.username}'s cart has been cleared", status=HTTP_200_OK)
+        return Response(data={'response':f"{user.username}'s cart has been cleared"}, status=HTTP_200_OK)
         
 
 
@@ -229,13 +277,13 @@ class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
         
     def post(self,request):
         if request.user.groups.filter(name="manager").exists():
-            return Response(data="Method Not Allowed", status=HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(data={"error": "Method Not Allowed"}, status=HTTP_405_METHOD_NOT_ALLOWED)
         elif request.user.groups.filter(name="delivery crew").exists():
-            return Response(data="Method Not Allowed", status=HTTP_405_METHOD_NOT_ALLOWED)
+            return Response(data={"error": "Method Not Allowed"}, status=HTTP_405_METHOD_NOT_ALLOWED)
         else:
             try:
                 if len(carts := Cart.objects.filter(user=self.request.user)) <= 0:
-                    return Response(data="No Items In Cart", status=HTTP_400_BAD_REQUEST)
+                    return Response(data={"error":"No Items In Cart"}, status=HTTP_400_BAD_REQUEST)
                 total = sum(cart.price for cart in list(carts))
                 new_order = Order.objects.create(
                     user=self.request.user,
@@ -250,9 +298,9 @@ class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
                         price=cart.price
                     ).save()
                     cart.delete()
-                return Response(data=f" Successfully Created {new_order.order_id}",status=HTTP_201_CREATED)
+                return Response(data={"response":f" Successfully Created {new_order.order_id}"},status=HTTP_201_CREATED)
             except Exception as e:
-                return Response(data=f"Error:{str(e)}", status=HTTP_400_BAD_REQUEST)
+                return Response(data=f"error:{"Unable to Create Order", 'reason':str(e)}", status=HTTP_400_BAD_REQUEST)
         
     def patch(self, request, order_id):
         order = get_object_or_404(Order,order_id=order_id)
@@ -260,7 +308,7 @@ class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
             if request.data['status']:
                 order.status = request.data['status']
             if not request.data['delivery_crew']:
-                return Response(data="POST body must contain either 'status' or 'delivery_crew' keys", status=HTTP_400_BAD_REQUEST)
+                return Response(data={'error':"POST body must contain either 'status' or 'delivery_crew' keys"}, status=HTTP_400_BAD_REQUEST)
             order.delivery_crew = User.objects.get(id=request.data['delivery_crew'].id)
 
             order.save()
@@ -276,6 +324,9 @@ class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
         else:
             return super().patch()
 
-
-
-
+    def delete(self, request, order_id):
+        if request.user.groups.filter(name="manager").exists():
+            order = get_object_or_404(Order, order_id=order_id)
+            order.delete()
+            return Response(status=HTTP_204_NO_CONTENT)
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)

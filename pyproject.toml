@@ -19,6 +19,10 @@ django-cockroachdb = "5.1"
 django-seed = "^0.3.1"
 djangorestframework-simplejwt = "^5.3.1"
 drf-redesign = "^0.4.0"
+loguru = "^0.7.2"
+django-prometheus = "^2.3.1"
+django-cacheops = "^7.1"
+django-redis = "^5.4.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"

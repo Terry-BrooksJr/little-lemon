@@ -1,7 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django_prometheus.models import ExportModelOperationsMixin
+
+
+
 # Create your models here.
-class Category(models.Model):
+class Category(ExportModelOperationsMixin('menu-categories'),models.Model):
     category_id = models.AutoField(primary_key=True )
     title = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(max_length=255, unique=True)
@@ -16,7 +20,7 @@ class Category(models.Model):
         verbose_name_plural = "catagories"
 
 
-class MenuItem(models.Model):
+class MenuItem(ExportModelOperationsMixin('menu_items'),models.Model):
     item_id = models.AutoField(primary_key=True )
     title = models.CharField(max_length=255, db_index=True)
     price = models.DecimalField(max_digits=6, decimal_places=2, db_index=True)
@@ -32,7 +36,7 @@ class MenuItem(models.Model):
         verbose_name = "menu item"
         verbose_name_plural = "menu items"
 
-class Cart(models.Model):
+class Cart(ExportModelOperationsMixin('carts'),models.Model):
     cart_id = models.AutoField(primary_key=True )
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     menuitem = models.ForeignKey(MenuItem, on_delete=models.PROTECT)
@@ -52,7 +56,7 @@ class Cart(models.Model):
     def __str__(self):
         return f"{self.user} - {self.price}"
 
-class Order(models.Model):
+class Order(ExportModelOperationsMixin('orders'),models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="customer")
     delivery_crew = models.ForeignKey(
         get_user_model(),
@@ -75,7 +79,7 @@ class Order(models.Model):
         verbose_name_plural = "orders"
 
 
-class OrderItem(models.Model):
+class OrderItem(ExportModelOperationsMixin('order-items'),models.Model):
     order_item_id = models.AutoField(primary_key=True )
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     menuitem = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
