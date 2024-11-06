@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "cacheops",
     "drf_redesign",
     "rest_framework",
     "rest_framework.authtoken",
@@ -116,29 +115,15 @@ DATABASES = {
             "PORT": os.getenv("PG_DATABASE_PORT"),
         'OPTIONS': {
             'sslmode': 'verify-full',
-            'sslrootcert': '/Users/terry-brooks/GitHub/coursera-meta-api-final/.postgresql/do-cert.crt',
- 
+            'sslrootcert': '/home/terry-brooks-jr/Github/little-lemon/.postgresql/do-cert.crt'
     }
         }
 }
-CACHEOPS_REDIS = f'redis://{os.getenv('CACHE_USER')}:{os.getenv('CACHE_PASSWORD')}@{os.getenv('CACHE_HOST')}:{os.getenv('CACHE_PORT')}/{os.getenv('CACHE_DB')}'
-CACHEOPS_CLIENT_CLASS = 'django_prometheus.cache.backends.redis.RedisCache'
-
 CACHES = {
     "default": {
-        "BACKEND": CACHEOPS_CLIENT_CLASS,
-        "LOCATION": CACHEOPS_REDIS,
+        "BACKEND": 'django_prometheus.cache.backends.redis.RedisCache',
+        "LOCATION": f'redis://{os.getenv('CACHE_USER')}:{os.getenv('CACHE_PASSWORD')}@{os.getenv('CACHE_HOST')}:{os.getenv('CACHE_PORT')}/{os.getenv('CACHE_DB')}'
     }
-}
-
-CACHEOPS_DEFAULTS = {
-    'timeout': 60*60
-}
-CACHEOPS = {
-    'auth.user': {'ops': 'get', 'timeout': 60*15},
-    'auth.*': {'ops': ('fetch', 'get')},
-    'auth.permission': {'ops': 'all'},
-    'LittleLemonAPI.*': {},
 }
 
 # Password validation

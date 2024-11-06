@@ -14,8 +14,20 @@ from django.db import IntegrityError
 from djoser.permissions import CurrentUserOrAdminOrReadOnly
 from django.contrib.auth.models import Group, User
 from html import unescape
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 
 
+@api_view(['GET'])
+@renderer_classes([JSONRenderer, BrowsableAPIRenderer])
+def api_root(request, format=format):
+    return Response({"Primary API Endpoints":[
+        {'Menu Items': reverse('items-list'), "Description":"The endpoints found at /api/orders encompass the entire lifecycle of an order, from creation , modifiction, destruction." },
+        {'Orders': reverse('Order-Management'),   "Description":"The endpoints found at /api/orders encompass the entire lifecycle of an order, from creation , modifiction, destruction." },
+        {'Cart': reverse('Cart-Management'),  "Description":"The endpoints found at /api/orders encompass the entire lifecycle of an order, from creation , modifiction, destruction." }
+    ]
+    }
+    )
 class MenuItemsListView(ListCreateAPIView):
     """View for listing and creating menu items.
 

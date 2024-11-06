@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 import LittleLemonAPI.urls
-from LittleLemonAPI.urls import api_root
+from LittleLemonAPI.views import api_root
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('', include('django_prometheus.urls')),

@@ -1,16 +1,8 @@
 from django.urls import re_path, path,include
 from LittleLemonAPI.views import MenuItemsListView, MenuItemDetailView, ManagerUserManagement, DeliveryCrewUserManagement, CartManagement, OrderManagement
 
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.reverse import reverse
 
-def api_root(request, format=format):
-    return Response([
-        {'Menu Items': reverse('items-list', request=request, format=format)},
-        {'Orders': reverse('Order-Management', request=request, format=format)},
-        {'Cart': reverse('Cart-Management', request=request, format=format)}
-    ])
+
 urlpatterns = [
     re_path(r'^users/', include('djoser.urls')),
     re_path(r'^users/', include('djoser.urls.authtoken')),
