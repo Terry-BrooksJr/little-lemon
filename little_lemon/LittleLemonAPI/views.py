@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework import filters
 from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView 
 from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem
-from LittleLemonAPI.serializers import MenuItemSerializer, UserSerializer, CartSerializer, OrderSerializer
+from LittleLemonAPI.serializers import MenuItemSerializer, UserSerializer, CartSerializer, OrderSerializer, MenuItemDetailSerializer
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from django_filters.rest_framework import DjangoFilterBackend
 from django.forms.models import model_to_dict
@@ -16,7 +16,7 @@ from django.contrib.auth.models import Group, User
 from html import unescape
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
-
+from django.urls import reverse
 
 @api_view(['GET'])
 @renderer_classes([JSONRenderer, BrowsableAPIRenderer])
@@ -48,7 +48,7 @@ class MenuItemsListView(ListCreateAPIView):
     serializer_class = MenuItemSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filterset_fields = ['featured', 'category']
+    filterset_fields = ['featured', 'category', 'is_on_sale','contains_dairy', 'contains_treeuts',"contains_gluten" ]
     search_fields = ["title"]
 
 
@@ -94,7 +94,7 @@ class MenuItemDetailView(RetrieveUpdateDestroyAPIView):
     Raises:
         HTTP_403_FORBIDDEN: If a non-manager user attempts to update or delete a menu item.
     """
-    serializer_class = MenuItemSerializer
+    serializer_class = MenuItemDetailSerializer
     queryset = MenuItem.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]

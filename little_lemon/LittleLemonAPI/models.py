@@ -28,12 +28,16 @@ class MenuItem(ExportModelOperationsMixin('menu_items'),models.Model):
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
     calories = models.IntegerField(null=True, blank=True)
     sugar_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
-    protien_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
+    protein_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
     carbohydrates_mg = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
     saturated_fat_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
     contains_dairy = models.BooleanField(null=True, blank=True)
     contains_treenuts = models.BooleanField(null=True, blank=True)
     contains_gluten = models.BooleanField(null=True, blank=True)
+    is_on_sale = models.BooleanField(null=True, blank=True)
+
+
+    
 
 
     def __str__(self):
