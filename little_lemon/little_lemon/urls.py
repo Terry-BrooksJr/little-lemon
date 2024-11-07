@@ -15,17 +15,23 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+from debug_toolbar.toolbar import debug_toolbar_urls
+from django.conf import settings
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import include, path, re_path
+
 import LittleLemonAPI.urls
 from LittleLemonAPI.views import api_root
+
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path('', include('django_prometheus.urls')),
+    path("", include("django_prometheus.urls")),
     re_path(r"^api/", include(LittleLemonAPI.urls)),
-    re_path(r'', include('djoser.urls.authtoken')),
-    re_path(r'^$', api_root, name='API-Root')
-
-
-
+    re_path(r"", include("djoser.urls.authtoken")),
+    re_path(r"^$", api_root, name="API-Root"),
+    re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework"))
 ]
+
+
+if settings.DEBUG:
+    urlpatterns += debug_toolbar_urls()

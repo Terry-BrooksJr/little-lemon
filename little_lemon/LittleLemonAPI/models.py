@@ -1,12 +1,11 @@
-from django.db import models
 from django.contrib.auth import get_user_model
+from django.db import models
 from django_prometheus.models import ExportModelOperationsMixin
 
 
-
 # Create your models here.
-class Category(ExportModelOperationsMixin('menu-categories'),models.Model):
-    category_id = models.AutoField(primary_key=True )
+class Category(ExportModelOperationsMixin("menu-categories"), models.Model):
+    category_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255, db_index=True)
     slug = models.SlugField(max_length=255, unique=True)
 
@@ -20,25 +19,29 @@ class Category(ExportModelOperationsMixin('menu-categories'),models.Model):
         verbose_name_plural = "catagories"
 
 
-class MenuItem(ExportModelOperationsMixin('menu_items'),models.Model):
-    item_id = models.AutoField(primary_key=True )
+class MenuItem(ExportModelOperationsMixin("menu_items"), models.Model):
+    item_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255, db_index=True)
     price = models.DecimalField(max_digits=6, decimal_places=2, db_index=True)
     featured = models.BooleanField(db_index=True, default=False)
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
     calories = models.IntegerField(null=True, blank=True)
-    sugar_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
-    protein_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
-    carbohydrates_mg = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
-    saturated_fat_gm = models.DecimalField(max_digits=6,decimal_places=2, null=True, blank=True)
+    sugar_gm = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    protein_gm = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    carbohydrates_mg = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    saturated_fat_gm = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True
+    )
     contains_dairy = models.BooleanField(null=True, blank=True)
     contains_treenuts = models.BooleanField(null=True, blank=True)
     contains_gluten = models.BooleanField(null=True, blank=True)
     is_on_sale = models.BooleanField(null=True, blank=True)
-
-
-    
-
 
     def __str__(self):
         return f"{self.title} ({self.category.title})"
@@ -49,14 +52,15 @@ class MenuItem(ExportModelOperationsMixin('menu_items'),models.Model):
         verbose_name = "menu item"
         verbose_name_plural = "menu items"
 
-class Cart(ExportModelOperationsMixin('carts'),models.Model):
-    cart_id = models.AutoField(primary_key=True )
+
+class Cart(ExportModelOperationsMixin("carts"), models.Model):
+    cart_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     menuitem = models.ForeignKey(MenuItem, on_delete=models.PROTECT)
     quantity = models.SmallIntegerField()
     unit_price = models.DecimalField(max_digits=6, decimal_places=2, null=True)
     price = models.DecimalField(max_digits=6, decimal_places=2, null=True)
- 
+
     class Meta:
         unique_together = ("menuitem", "user")
         db_table = "user_carts"
@@ -64,13 +68,14 @@ class Cart(ExportModelOperationsMixin('carts'),models.Model):
         verbose_name = "cart"
         verbose_name_plural = "carts"
 
-
-
     def __str__(self):
         return f"{self.user} - {self.price}"
 
-class Order(ExportModelOperationsMixin('orders'),models.Model):
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="customer")
+
+class Order(ExportModelOperationsMixin("orders"), models.Model):
+    user = models.ForeignKey(
+        get_user_model(), on_delete=models.CASCADE, related_name="customer"
+    )
     delivery_crew = models.ForeignKey(
         get_user_model(),
         on_delete=models.SET_NULL,
@@ -92,8 +97,8 @@ class Order(ExportModelOperationsMixin('orders'),models.Model):
         verbose_name_plural = "orders"
 
 
-class OrderItem(ExportModelOperationsMixin('order-items'),models.Model):
-    order_item_id = models.AutoField(primary_key=True )
+class OrderItem(ExportModelOperationsMixin("order-items"), models.Model):
+    order_item_id = models.AutoField(primary_key=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     menuitem = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.SmallIntegerField()

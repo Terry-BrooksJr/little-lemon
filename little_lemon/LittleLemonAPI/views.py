@@ -1,344 +1,353 @@
-from django.shortcuts import render, get_object_or_404
-from rest_framework import filters
-from rest_framework.generics import ListAPIView, RetrieveUpdateDestroyAPIView, ListCreateAPIView 
-from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem
-from LittleLemonAPI.serializers import MenuItemSerializer, UserSerializer, CartSerializer, OrderSerializer, MenuItemDetailSerializer
-from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
-from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.forms.models import model_to_dict
-from  rest_framework.status import HTTP_403_FORBIDDEN, HTTP_201_CREATED, HTTP_204_NO_CONTENT, HTTP_200_OK, HTTP_422_UNPROCESSABLE_ENTITY, HTTP_404_NOT_FOUND, HTTP_400_BAD_REQUEST,HTTP_405_METHOD_NOT_ALLOWED
+from rest_framework import filters, status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
+from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import IntegrityError
-from djoser.permissions import CurrentUserOrAdminOrReadOnly
+from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import Group, User
-from html import unescape
-from rest_framework.decorators import api_view, renderer_classes
+from django.db import IntegrityError
+from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem
+from LittleLemonAPI.serializers import MenuItemSerializer, UserSerializer, CartSerializer, OrderSerializer, MenuItemDetailSerializer
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
-from django.urls import reverse
-
+from loguru import logger
+import json
+from datetime import datetime
 @api_view(['GET'])
-@renderer_classes([JSONRenderer, BrowsableAPIRenderer])
-def api_root(request, format=format):
-    return Response({"Primary API Endpoints":[
-        {'Menu Items': reverse('items-list'), "Description":"The endpoints found at /api/orders encompass the entire lifecycle of an order, from creation , modifiction, destruction." },
-        {'Orders': reverse('Order-Management'),   "Description":"The endpoints found at /api/orders encompass the entire lifecycle of an order, from creation , modifiction, destruction." },
-        {'Cart': reverse('Cart-Management'),  "Description":"The endpoints found at /api/orders encompass the entire lifecycle of an order, from creation , modifiction, destruction." }
-    ]
-    }
-    )
+@renderer_classes([BrowsableAPIRenderer, JSONRenderer])
+def api_root(request):
+    """Welcome To the Little Lemon API. Get started by making a request to one of the Primary Endpoints"""
+    return Response({
+        'primary API Endpoint': [
+            {'Menu Items': reverse('items-list'), "description": "Manage menu items: create, update, delete."},
+            {'Orders': reverse('Order-Management'), "description": "Manage orders from creation to deletion."},
+            {'Cart': reverse('Cart-Management'), "description": "Manage cart items, add, update, and delete items."}
+        ]
+    })
+
+
+class MyEncoder(json.JSONEncoder):
+    """Custom JSON encoder for serializing specific object types.
+
+    This encoder extends the default JSONEncoder to handle serialization of
+    custom objects such as TicketStatus, datetime, and Comment. It provides
+    a way to convert these objects into a JSON-compatible format.
+    """
+
+    def default(self, obj):
+        """
+        Converts custom objects to a JSON-compatible format.
+
+        This method checks the ticket_type of the object and returns a corresponding
+        JSON representation. If the object ticket_type is not recognized, it falls
+        back to the default serialization method.
+
+        Args:
+            obj: The object to be serialized.
+
+        Returns:
+            A JSON-compatible representation of the object.
+
+        Raises:
+            TypeError: If the object ticket_type is not serializable.
+        """
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
+
+
+
 class MenuItemsListView(ListCreateAPIView):
-    """View for listing and creating menu items.
+    """
+    Menu Items List and Creation API View.
 
-    This view allows authenticated users to list all menu items and enables managers to create new menu items. It supports filtering and searching based on specific fields.
+    This view provides a comprehensive interface for listing and creating menu items in the system.
+    - **Listing**: All users can view the list of menu items, which includes filtering and searching functionalities.
+    - **Creation**: Only users in the "manager" group are permitted to create new menu items. When a manager creates an item, the menu item details (such as title, description, and category) are validated and stored.
 
-    Args:
-        request: The HTTP request object.
-        *args: Additional positional arguments.
-        **kwargs: Additional keyword arguments.
+    ### Filters and Search
+    - **Filter by**: `featured`, `category`
+    - **Search by**: `title`
 
-    Returns:
-        Response: A response object containing the list of menu items or the result of the creation operation.
-
+    ### Permissions
+    - Authenticated users can view the menu items (read-only).
+    - Only users in the "manager" group can create new menu items.
+    
     Raises:
-        HTTP_403_FORBIDDEN: If a non-manager user attempts to create a menu item.
+    - **403 Forbidden**: If a non-manager attempts to create a menu item.
+    - **400 Bad Request**: If an item creation fails due to invalid data.
     """
     queryset = MenuItem.objects.all()
     serializer_class = MenuItemSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filterset_fields = ['featured', 'category', 'is_on_sale','contains_dairy', 'contains_treeuts',"contains_gluten" ]
-    search_fields = ["title"]
-
+    filterset_fields = ['featured', 'category', 'is_on_sale', "contains_dairy", "contains_treenuts", "contains_gluten"]
+    search_fields = ['title']
 
     def create(self, request, *args, **kwargs):
-        """Create a new menu item if the user is a manager.
-            Reason For Method Overload: 
-                To Limit Creation of Objects to the Manager Role.
+        if not request.user.groups.filter(name="manager").exists():
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            return super().create(request, *args, **kwargs)
+        except (IntegrityError, TypeError, KeyError) as e:
+            return Response({"error": "Unable to add menu item", "reason": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        This method checks if the requesting user belongs to the "manager" group before allowing the creation of a new menu item. If the user is not a manager, a forbidden response is returned.
-
-        Args:
-            request: The HTTP request object.
-            *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments.
-
-        Returns:
-            Response: A response object indicating the result of the creation operation.
-
-        Raises:
-            HTTP_403_FORBIDDEN: If the user is not a manager.
-        """
-        
-        if request.user.groups.filter(name="manager").exists():
-            try:
-                return super().create(request, *args, **kwargs)
-            except (IntegrityError, TypeError, KeyError) as e:
-                return Response({"error": "Unable to Add Menu Item", "reason": str(e)},status=HTTP_400_BAD_REQUEST)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
 
 class MenuItemDetailView(RetrieveUpdateDestroyAPIView):
-    """View for retrieving, updating, and deleting menu items.
+    """
+    Menu Item Detail, Update, and Delete API View.
 
-    This view provides functionality to manage individual menu items, allowing authenticated users to retrieve details, while restricting updates and deletions to users in the "manager" group. It also supports partial updates and permission checks for each operation.
+    This view provides detailed access to a single menu item, allowing retrieval, updates, and deletion.
+    - **Retrieve**: All authenticated users can view the details of a specific menu item.
+    - **Update and Delete**: Only users in the "manager" group can modify or delete menu items.
 
-    Args:
-        request: The HTTP request object.
-        *args: Additional positional arguments.
-        **kwargs: Additional keyword arguments.
-
-    Returns:
-        Response: A response object containing the menu item data or the result of the update or delete operation.
-
+    ### Permissions
+    - Authenticated users can retrieve menu item details (read-only).
+    - Only managers can update or delete a menu item.
+    
     Raises:
-        HTTP_403_FORBIDDEN: If a non-manager user attempts to update or delete a menu item.
+    - **403 Forbidden**: If a non-manager attempts to update or delete a menu item.
+    - **404 Not Found**: If the menu item does not exist.
     """
     serializer_class = MenuItemDetailSerializer
     queryset = MenuItem.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['title']
     lookup_field = "item_id"
 
+    def perform_update_or_destroy(self, request, method):
+        if request.user.groups.filter(name="manager").exists():
+            return method(request)
+        return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
 
     def update(self, request, *args, **kwargs):
-        if request.user.groups.filter(name="manager").exists():
-            return super().update(request, *args, **kwargs)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
-    
+        return self.perform_update_or_destroy(request, lambda req: super().update(req, *args, **kwargs))
 
     def destroy(self, request, *args, **kwargs):
-        if request.user.groups.filter(name="manager").exists():
-            return super().destroy(request, *args, **kwargs)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
-
+        return self.perform_update_or_destroy(request, lambda req: super().destroy(req, *args, **kwargs))
 
     def partial_update(self, request, *args, **kwargs):
-        if request.user.groups.filter(name="manager").exists():
-            return super().partial_update(request, *args, **kwargs)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
- 
+        return self.perform_update_or_destroy(request, lambda req: super().partial_update(req, *args, **kwargs))
 
 class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+    """
+    Manager User Management API View.
+
+    This view manages user roles, specifically adding or removing users from the "manager" group.
+    - **Add User to Manager Group**: Only current managers can add other users to the "manager" group, granting them special privileges.
+    - **Remove User from Manager Group**: Managers can also remove users from the "manager" group.
+    - **List of Managers**: Provides a list of all users who belong to the "manager" group.
+
+    ### Permissions
+    - Only users in the "manager" group can access these operations.
+    
+    Raises:
+    - **403 Forbidden**: If a non-manager attempts to access this view.
+    - **404 Not Found**: If the specified user does not exist.
+    - **400 Bad Request**: If required data, such as `username`, is missing.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['username', 'first_name', 'last_name']
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['is_active', 'is_staff', 'is_superuser']
 
     def post(self, request):
-        if request.user.groups.filter(name="manager").exists(): 
-            try:
-                if username := request.data['username']:
-                    user = get_object_or_404(User, username=username)
-                    managers = Group.objects.get(name="manager")
-                    managers.user_set.add(user)
-                    return Response(data={"response":f"{user.username} has been added to the manager group and the accounts permissions have been updated to reflect the change."}, status=HTTP_201_CREATED)
-            except KeyError as e:
-                return Response(data={'error':'POST body incomplete must have key "username"', "reason":str(e)},status=HTTP_400_BAD_REQUEST)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
+        if not request.user.groups.filter(name="manager").exists():
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            username = request.data['username']
+            user = get_object_or_404(User, username=username)
+            Group.objects.get(name="manager").user_set.add(user)
+            return Response({"response": f"{user.username} added to manager group."}, status=status.HTTP_201_CREATED)
+        except KeyError:
+            return Response({'error': 'POST body must include "username".'}, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, id):
-        if request.user.groups.filter(name="manager").exists():
-            try:
-                user = get_object_or_404(User, id=id)
-                managers = Group.objects.get(name="manager")
-                managers.user_set.remove(user)
-                return  Response({'response':f"{user.username} has been removed to the manager group and the accounts permissions have been updated to reflect the change."}, status=HTTP_200_OK)
-            except KeyError as e:
-                return Response(data={'error':'URL must have a path parameter for the targeted employee id', 'reason':str(e)}, status=HTTP_400_BAD_REQUEST)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
-        
+        if not request.user.groups.filter(name="manager").exists():
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        user = get_object_or_404(User, id=id)
+        Group.objects.get(name="manager").user_set.remove(user)
+        return Response({"response": f"{user.username} removed from manager group."}, status=status.HTTP_200_OK)
+
     def get(self, request):
         if not request.user.groups.filter(name="manager").exists():
-            return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
-        users = User.objects.all()
-        manager_group_members = []
-        for user in users:
-            if user.groups.filter(name="manager").exists():
-                user = UserSerializer(user).data
-                manager_group_members.append(user)
-
-        return Response(data={'manager':manager_group_members}, status=HTTP_200_OK)
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        crew_users = User.objects.filter(groups__name="manager")
+        delivery_crew_users = UserSerializer(crew_users, many=True)
+        final_list =list(delivery_crew_users.data)
+        return Response(final_list , status=status.HTTP_200_OK)
     
 class DeliveryCrewUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+    """
+    Delivery Crew User Management API View.
+
+    This view manages user roles for the "delivery crew" group, specifically allowing managers to add or remove users from this group.
+    - **Add User to Delivery Crew Group**: Managers can assign users to the "delivery crew" group, enabling them to take delivery responsibilities.
+    - **Remove User from Delivery Crew Group**: Managers can remove users from the "delivery crew" group.
+    - **List Delivery Crew**: Provides a list of all users in the "delivery crew" group.
+
+    ### Permissions
+    - Only users in the "manager" group can access these operations.
+
+    Raises:
+    - **403 Forbidden**: If a non-manager attempts to access this view.
+    - **404 Not Found**: If the specified user does not exist.
+    - **400 Bad Request**: If required data, such as `username`, is missing.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    lookup_field = id
     search_fields = ['username', 'first_name', 'last_name']
     permission_classes = [IsAuthenticated]
-    filterset_fields = ['is_active', 'is_staff', 'is_superuser']
 
     def post(self, request):
-        if request.user.groups.filter(name="manager").exists(): 
-            try:
-                if username := request.data['username']:
-                    user = get_object_or_404(User, username=username)
-                    delivery_staff = Group.objects.get(name="delivery crew")
-                    delivery_staff.user_set.add(user)
-                    return Response(data={'response' : f"{user.username} has been added to the manager group and the accounts permissions have been updated to reflect the change."}, status=HTTP_201_CREATED)
-            except KeyError as e:
-                return Response(data={'error':'Post body must have key "username"', 'reason': str(e)}, status=HTTP_422_UNPROCESSABLE_ENTITY)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
+        if not request.user.groups.filter(name="manager").exists():
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        try:
+            username = request.data['username']
+            user = get_object_or_404(User, username=username)
+            delivery_crew_group = Group.objects.get(name="delivery crew")
+            delivery_crew_group.user_set.add(user)
+            return Response({"response": f"{user.username} added to delivery crew."}, status=status.HTTP_201_CREATED)
+        except KeyError:
+            return Response({'error': 'POST body must include "username".'}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
-        if request.user.groups.filter(name="manager").exists():
-            try:               
-                user = get_object_or_404(User, id=id)
-                managers = Group.objects.get(name="delivery crew")
-                managers.user_set.remove(user)
-                return Response({"response":f"{user.username} has been removed to the manager group and the accounts permissions have been updated to reflect the change."}, status=
-                                HTTP_200_OK)
-            except KeyError:
-                return Response(data={'error':'URL must have a path parameter for the targeted employee id'}, status=HTTP_400_BAD_REQUEST)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
-    
+        if not request.user.groups.filter(name="manager").exists():
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        user = get_object_or_404(User, id=id)
+        delivery_crew_group = Group.objects.get(name="delivery crew")
+        delivery_crew_group.user_set.remove(user)
+        return Response({"response": f"{user.username} removed from delivery crew."}, status=status.HTTP_200_OK)
+
     def get(self, request):
-        if request.user.groups.filter(name="manager").exists():    
-            users = User.objects.all()
-            delivery_group_members = []
-            for user in users:
-                if user.groups.filter(name="delivery crew").exists():
-                    user = UserSerializer(user).data
-                    delivery_group_members.append(user)
-
-            return Response(data={"delivery_personnel":delivery_group_members}, status=HTTP_200_OK)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
+        if not request.user.groups.filter(name="manager").exists():
+            return Response({"error": "Action restricted to managers only."}, status=status.HTTP_403_FORBIDDEN)
+        all_users = User.objects.all()
+        crew_users = [
+            query_user
+            for query_user in all_users
+            if query_user.groups.filter(name="manager").exists()
+        ]
+        delivery_crew_users = UserSerializer(crew_users, many=True)
+        final_list =list(delivery_crew_users.data)
+        return Response(final_list , status=status.HTTP_200_OK)
     
-
 
 class CartManagement(RetrieveUpdateDestroyAPIView):
+    """
+    User Cart Management API View.
+
+    This view manages the shopping cart for authenticated users.
+    - **Retrieve Cart**: Displays the contents of the user’s cart, including item names, quantities, and total prices.
+    - **Add to Cart**: Allows users to add items to their cart by specifying item ID and quantity.
+    - **Clear Cart**: Clears all items in the user’s cart.
+
+    ### Permissions
+    - Only authenticated users can access cart operations.
+    
+    Raises:
+    - **400 Bad Request**: If required fields are missing in the request body (e.g., `quantity`, `item_id`).
+    - **404 Not Found**: If the specified item does not exist.
+    - **403 Forbidden**: If a user tries to perform unauthorized cart actions.
+    """
     queryset = Cart.objects.all()
-    serializer_class = CartSerializer   
-    # lookup_field = 'cart_id'
+    serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
-    def calculate_price(self, quantity,  unit_price):
-            return quantity * unit_price
+
+    def calculate_price(self, quantity, unit_price):
+        return float(quantity) * float(unit_price)
 
     def get(self, request):
-        user = User.objects.get(username=self.request.user.username)
-        carts = Cart.objects.filter(user=user)
-        all_cart_items = []
-        for cart in carts:
-            cart_item = {
-                'item name': MenuItemSerializer(
-                    MenuItem.objects.get(item_id=cart.menuitem.item_id)
-                ).data['title'],
-                'product id': cart.menuitem.item_id,
-                'quantity': cart.quantity ,
-                'price per item': float(MenuItemSerializer(
-                    MenuItem.objects.get(item_id=cart.menuitem.item_id)
-                ).data['price']),
-            }
-            cart_item['price'] = self.calculate_price(float(cart_item['quantity']), float(cart_item['price per item']))
-            all_cart_items.append(cart_item)
-        return Response(data=all_cart_items, status=HTTP_200_OK)
-    
+        user = request.user
+        cart_items = Cart.objects.filter(user=user)
+        all_cart_items = [{
+            'item name': MenuItemSerializer(cart.menuitem).data['title'],
+            'product id': cart.menuitem.item_id,
+            'quantity': cart.quantity,
+            'price per item': float(cart.menuitem.price),
+            'price': self.calculate_price(cart.quantity, cart.menuitem.price)
+        } for cart in cart_items]
+        return Response(all_cart_items, status=status.HTTP_200_OK)
+
     def post(self, request):
         try:
-            user = User.objects.get(username=self.request.user.username)
-            if item_id := request.data['item_id']:
-                if quantity := request.data['quantity']:
-                        item = MenuItem.objects.get(item_id=item_id)
-                        unit_price = item.price
-                        cart = Cart.objects.create(
-                            user=user,
-                            menuitem=item,
-                            quantity=quantity,
-                            unit_price=unit_price,
-                            price=round(float(unit_price)*float(quantity),2)
-                            ).save()
-                return Response(data={"response" : f"{quantity} {item.title}s been added to {user.username}'s cart"}, status=HTTP_201_CREATED)
+            user = request.user
+            item_id = request.data['item_id']
+            quantity = request.data['quantity']
+            item = MenuItem.objects.get(item_id=item_id)
+            Cart.objects.create(
+                user=user, menuitem=item, quantity=quantity,
+                unit_price=item.price, price=round(item.price * quantity, 2)
+            )
+            return Response({"response": f"{quantity} {item.title}(s) added to {user.username}'s cart"}, status=status.HTTP_201_CREATED)
         except KeyError:
-                return Response(data={'error': 'Post body must have keys "quantity", "item_id"','reason':str(e)},  status=HTTP_400_BAD_REQUEST)
+            return Response({"error": 'Request body must include "quantity" and "item_id".'}, status=status.HTTP_400_BAD_REQUEST)
         except MenuItem.DoesNotExist:
-            return Response(data={'error':'Item does not exist','reason':str(e)}, status=HTTP_404_NOT_FOUND)
-        except IntegrityError as e:
-            return Response(data={'error':'Item already in cart', 'reason':unescape(str(e))}, status=HTTP_400_BAD_REQUEST)
-        
+            return Response({"error": "Item does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        except IntegrityError:
+            return Response({"error":"Item Already In Cart"}, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request):
-        user = User.objects.get(username=self.request.user.username)
-        carts = Cart.objects.filter(user=user)
-        for cart in carts:
-            cart.delete()
-        return Response(data={'response':f"{user.username}'s cart has been cleared"}, status=HTTP_200_OK)
-        
-
-
-
+        user = request.user
+        Cart.objects.filter(user=user).delete()
+        return Response({"response": f"{user.username}'s cart cleared."}, status=status.HTTP_200_OK)
 
 class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+    """
+    Order Management API View.
+
+    This view provides the functionality for creating, viewing, updating, and deleting orders.
+    - **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.
+    - **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.
+    - **Update Order**: Managers can assign delivery personnel and update the status of an order.
+    - **Delete Order**: Only managers can delete an order.
+
+    ### Filters and Search
+    - **Filter by**: `status`, `date`, `delivery_crew`, `user`
+    - **Search by**: `order_id`, `user`
+
+    ### Permissions
+    - Only authenticated users can access order operations.
+    - Managers can view all orders and perform all actions.
+    - Delivery crew can view and update assigned orders.
+    - Customers can view and create their orders only.
+x
+    Raises:
+    - **403 Forbidden**: If a user tries to perform an unauthorized action.
+    - **404 Not Found**: If the specified order does not exist.
+    - **400 Bad Request**: If required fields are missing in the request.
+    - **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.
+    """
     queryset = Order.objects.all()
     serializer_class = OrderSerializer
-    lookup_field = 'order_id'
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['status', 'date', 'delivery_crew', 'user']
-    search_fields = ["order_is", "user"]
-    
-    def get(self, request):
-        if request.user.groups.filter(name="manager").exists():
-            return Response(data=Order.objects.all(),status=HTTP_200_OK) 
-        elif request.user.groups.filter(name="delivery crew").exists():
-            return  Response(data=Order.objects.filter(delivery_crew=request.user), status=HTTP_200_OK)
-        else:
-            return Response(data=Order.objects.filter(user=request.user),status=HTTP_200_OK)
-        
-    def post(self,request):
-        if request.user.groups.filter(name="manager").exists():
-            return Response(data={"error": "Method Not Allowed"}, status=HTTP_405_METHOD_NOT_ALLOWED)
-        elif request.user.groups.filter(name="delivery crew").exists():
-            return Response(data={"error": "Method Not Allowed"}, status=HTTP_405_METHOD_NOT_ALLOWED)
-        else:
-            try:
-                if len(carts := Cart.objects.filter(user=self.request.user)) <= 0:
-                    return Response(data={"error":"No Items In Cart"}, status=HTTP_400_BAD_REQUEST)
-                total = sum(cart.price for cart in list(carts))
-                new_order = Order.objects.create(
-                    user=self.request.user,
-                    total=total
-                ).save()
-                for cart in carts:
-                    order_item = OrderItem.objects.create(
-                        order=new_order.order_id,
-                        menuitem=MenuItem.objects.get(item_id=cart.menuitem.item_id),
-                        quantity=cart.quantity,
-                        unit_price=cart.unit_price,
-                        price=cart.price
-                    ).save()
-                    cart.delete()
-                return Response(data={"response":f" Successfully Created {new_order.order_id}"},status=HTTP_201_CREATED)
-            except Exception as e:
-                return Response(data=f"error:{"Unable to Create Order", 'reason':str(e)}", status=HTTP_400_BAD_REQUEST)
-        
-    def patch(self, request, order_id):
-        order = get_object_or_404(Order,order_id=order_id)
-        if request.user.groups.filter(name="manager").exists():            
-            if request.data['status']:
-                order.status = request.data['status']
-            if not request.data['delivery_crew']:
-                return Response(data={'error':"POST body must contain either 'status' or 'delivery_crew' keys"}, status=HTTP_400_BAD_REQUEST)
-            order.delivery_crew = User.objects.get(id=request.data['delivery_crew'].id)
+    search_fields = ['order_id', 'user']
 
-            order.save()
-            return Response(status=HTTP_204_NO_CONTENT)
-        elif request.user.groups.filter(name="delivery crew").exists():                
-            if request.data['status']:
-                order.status = request.data['status']
-                order.save()
-                return Response(status=HTTP_204_NO_CONTENT)
-            else:
-                return Response(data="POST body must contain either 'status' key", status=HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        user = self.request.user
+        if user.groups.filter(name="manager").exists():
+            return Order.objects.all()
+        if user.groups.filter(name="delivery crew").exists():
+            return Order.objects.filter(delivery_crew=user)
+        return Order.objects.filter(user=user)
 
-        else:
-            return super().patch()
-
-    def delete(self, request, order_id):
+    def post(self, request):
         if request.user.groups.filter(name="manager").exists():
-            order = get_object_or_404(Order, order_id=order_id)
-            order.delete()
-            return Response(status=HTTP_204_NO_CONTENT)
-        return Response(data={"error":"Action Restricted to Managers Only"}, status=HTTP_403_FORBIDDEN)
+            return Response({"error": "Managers cannot create orders."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        carts = Cart.objects.filter(user=request.user)
+        if not carts.exists():
+            return Response({"error": "No items in cart."}, status=status.HTTP_400_BAD_REQUEST)
+        total = sum(cart.price for cart in carts)
+        new_order = Order.objects.create(user=request.user, total=total)
+        for cart in carts:
+            OrderItem.objects.create(order=new_order, menuitem=cart.menuitem,
+                                     quantity=cart.quantity, unit_price=cart.unit_price,
+                                     price=cart.price)
+            cart.delete()
+        return Response({"response": f"Order {new_order.order_id} created."}, status=status.HTTP_201_CREATED)
