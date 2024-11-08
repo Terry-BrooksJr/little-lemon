@@ -1,0 +1,1722 @@
+{
+	"info": {
+		"_postman_id": "623c0e98-b088-4bff-8ee7-f8d030294a09",
+		"name": "Little Lemon API",
+		"description": "# API Documentation\n\n## Overview\n\nThe **Little Lemon API** project is Terry Brooks' final project for Meta's **APIs course on Coursera**. For more information about the course, visit the [Coursera course page](https://www.coursera.org/learn/apis/home/info). The source code for this project is available on [GitHub](https://github.com/Terry-BrooksJr/little-lemon) for learning purposes.\n\n> **Note**: Although this project is open-source, please remember Coursera’s academic honesty policy. Students should refer to the [Coursera Honor Code](https://www.coursera.support/s/article/209818863-Coursera-Honor-Code?) for guidelines on using publicly available materials. \n  \n\nThe **Little Lemon API** offers a range of endpoints for user and management tasks in a restaurant management context, including user registration, token generation, and basic managerial operations.\n\n---\n\n## Getting Started Guide\n\nTo start using the **Little Lemon API**, follow these steps:\n\n1. **Register as a customer**: Begin by creating an account using the **Create New User** request. This request can be found in the **User Management** folder of the Postman collection.\n    \n2. **Testing Managerial Tasks**: If you wish to explore endpoints with managerial permissions, you can use the provided dummy user token, which is pre-configured for manager-level access. Note that this token does not include staff or admin permissions.\n    \n\n> Dummy API Manager Token Can Be Accesed in the Collection Enviornment Under the `manager_token` . \n  \n\n1. **Authentication**: Most endpoints require a Bearer Token in the `Authorization` header. The token is stored as a parameterized variable, `user_token`, in the Postman Workspace. Use the **Create Token** request, found in **User Management > Token Management**, to generate this token. This request will automatically update the `user_token` variable in the collection’s variables.\n    \n2. **Browsable API Interface**: You can also access the **Django Rest Framework Browsable API** by visiting [https://api.little-lemon.xyz/](https://api.little-lemon.xyz/).\n    \n\n---\n\n## Authentication\n\nThe Little Lemon API uses **Bearer Token** authentication for secure access to most of its endpoints. Tokens are generated via the **Token Management** endpoint in the **User Management** folder and must be included in each request header using `Authorization: Bearer` . The token is automatically managed as the `user_token` variable within the Postman workspace.\n\n**Authentication Error**: If a token is missing, malformed, or invalid, the API returns an HTTP 401 Unauthorized response.\n\n---\n\n## Rate and Usage Limits\n\n**Educational Use Only**: This API is intended exclusively for educational purposes. The **Little Lemon** brand, related products, domains, logos, names, places, and events represented within this API are purely fictitious. Any resemblance to real companies, organizations, people, or events is coincidental.\n\n**Rate Limits**:\n\n- **Authenticated Requests**: Maximum of 12 requests per minute.\n    \n- **Unauthenticated Requests**: Maximum of 4 requests per minute.\n    \n- **User Creations**: Limited to 10 new users per day to manage account usage.\n    \n\nIf rate limits are exceeded, requests will return an HTTP 429 Too Many Requests status code.\n\n---\n\n## 503 Response\n\nAn HTTP 503 response indicates a temporary spike in traffic. Typically, the server will recover within five minutes. If the issue persists or you receive other 5XX errors, please contact support.\n\n---\n\n## Need Some Help?\n\nFor further assistance, refer to the following resources:\n\n- [Create a Github Issue](https://github.com/Terry-BrooksJr/little-lemon/issues/new)\n    \n- Email Developer at [API@little-lemon.xyz](https://mailto:API@little-lemon.xyz)\n    \n\nFor code samples and additional resources, check out our GitHub repository or see the Postman collection for practical request examples.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "20135114",
+		"_collection_link": "https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/collection/20135114-623c0e98-b088-4bff-8ee7-f8d030294a09?action=share&source=collection_link&creator=20135114"
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Requires Management Permissions",
+					"item": [
+						{
+							"name": "Get All Users on Delivery Crew",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/groups/delivery-crew/user",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"groups",
+										"delivery-crew",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Managers",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/groups/delivery-crew/user",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"groups",
+										"delivery-crew",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Add A User to Manager's Group",
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "value",
+											"value": "{{manager_token}}",
+											"type": "string"
+										},
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [
+									{
+										"key": "AUTH",
+										"value": "{{manager_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"{{username}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/groups/managers/user?format=json",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"groups",
+										"managers",
+										"user"
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								},
+								"description": "### POST /api/groups/managers/user\n\nThis endpoint is used to add a user to the managers group.\n\n#### Request Body\n\n- username (string, required): The username of the user to be added to the managers group.\n    \n\nExample:\n\n``` json\n{\n    \"username\": \"barry_backend\"\n}\n\n ```\n\n#### Response\n\nThe response is in JSON format and has a status code of 201 (Created).\n\n#### JSON Schema\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"response\": {\n            \"type\": \"string\",\n            \"description\": \"Interpolated string providing confirmation of the role addition and the update to their perissions.\"\n        }\n    }\n}\n\n ```"
+							},
+							"response": [
+								{
+									"name": "Unauthorized - Add A User to Manager's Group",
+									"originalRequest": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "AUTH",
+												"value": "{{manager_token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"username\": \"barry_backend\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/api/groups/managers/user?format=json",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"api",
+												"groups",
+												"managers",
+												"user"
+											],
+											"query": [
+												{
+													"key": "format",
+													"value": "json"
+												}
+											]
+										}
+									},
+									"status": "Unauthorized",
+									"code": 401,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 04 Nov 2024 13:56:32 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "58"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										},
+										{
+											"key": "Allow",
+											"value": "GET, POST, DELETE, HEAD, OPTIONS"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "no-cache,no-store"
+										},
+										{
+											"key": "Expires",
+											"value": "Thu, 01 Jan 1970 00:00:00 GMT"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Set-Cookie",
+											"value": ".Tunnels.Relay.WebForwarding.Cookies=CfDJ8E0FHi1JCVNKrny-ARCYWxPhwedq-T6f_yEk-g8kzhqGsvLqLugl-CR8KyJA1qgZmeD3WCAWWfDOAtTACxqIPYQgIAL4fI2nH4EauJPkgQsOIopXOVWmVlyziPS1BKcmkmPxwX4gYUvbKndNwl15_DQdcGCHRuJFbV9wDLbywk6Wps1h8DhVeJBvQMj2nCBHuSjuxsOHC5fYCqHdbGCbM4swPcCPoaiifj2ZlQ-JFBhi0dVVcQsiOBPoHi_L9yU4MzeAeWiHp08Ny3ZPPv_Lb2H9YSy0nWy6rWbq18oOxrZnpNW6QtrL3WRgmmiR2U4IpTG74Iq4XlM0YvwFH_A_X_tNAs9-sLkarVdgRAtRh8-DE1voL2uthOHW8kAAEB_k_PqIsEVCJ4JKiVcYt4ysQY-00GQjj_WgiQ_EPu1sbf2Wu7rxV-fh7rHkVKSPUVWIgRQ40c7wlabNnp5laRYqDB4vGzsso_w950FC3ku6Zw_pTWaDv_KWuD_0GDvYlFGQU9538kqmSZxeqL2sy7elXlgczJ3syzlvlv85jEjbujB6YoRewc5aaPIHVWaZbrx8tgpZgDp82X39r45c_iN1sgpy9-BpRZnkZ5S_Z6ruflaega0uuyJti9nnacZWgy968QnnOlDRSJKCBEFI7K1_uBmf87x89ggUKeKfbXf-P6xpqaUAzCv98q5b4LzPUI3_4lyPrZ-5iicvPYu6MadStSiZqZg8oleUTqnhH0FZfhBWnP3651zU14KcHD19hqwPHFcaP85LVDXYtbKUTTqIBpZcjiMy_Fa2Bztm4fv0sTQVBesXWK_SapqqDb3CKdmhAH86vl7HexAZqjtNkEN5UTkMH_koBDPWhbuS0UvIgs5StaZ_LpFK07zZ0uwZrt2hDBjpdYzj5Tpipz8PpyAnPn25l_yqW8CCKERf3ZzzQiwu; path=/; secure; samesite=none"
+										},
+										{
+											"key": "Vary",
+											"value": "Accept"
+										},
+										{
+											"key": "WWW-Authenticate",
+											"value": "Token"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "RateLimit-Limit",
+											"value": "HttpRequestRatePerPort:1500/m"
+										},
+										{
+											"key": "RateLimit-Remaining",
+											"value": "HttpRequestRatePerPort:1499"
+										},
+										{
+											"key": "RateLimit-Reset",
+											"value": "HttpRequestRatePerPort:36s"
+										},
+										{
+											"key": "X-Report-Abuse",
+											"value": "https://msrc.microsoft.com/report/abuse"
+										},
+										{
+											"key": "x-ms-ratelimit-limit",
+											"value": "1500"
+										},
+										{
+											"key": "x-ms-ratelimit-remaining",
+											"value": "1494"
+										},
+										{
+											"key": "x-ms-ratelimit-used",
+											"value": "6"
+										},
+										{
+											"key": "x-ms-ratelimit-reset",
+											"value": "0"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "same-origin"
+										},
+										{
+											"key": "Cross-Origin-Opener-Policy",
+											"value": "same-origin"
+										},
+										{
+											"key": "X-Robots-Tag",
+											"value": "noindex, nofollow"
+										},
+										{
+											"key": "VsSaaS-Request-Id",
+											"value": "1d55acc0-0b44-42b4-b402-b454ea05b87a"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "X-Served-By",
+											"value": "tunnels-prod-rel-use-v3-cluster"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"detail\": \"Authentication credentials were not provided.\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Add A User to Delivery Crew Group",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "AUTH",
+										"value": "{{manager_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"username\": \"terry-brooks\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/api/groups/delivery-crew/user?format=json",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"groups",
+										"delivery-crew",
+										"user"
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								},
+								"description": "The endpoint allows the addition of a user to the delivery crew group\n\n### Request Body\n\n- username (string, required): The username of the user to be added to the delivery crew group.\n    \n\n### Response\n\nUpon successful execution, the response will have a status code of 201 and a content type of application/json. The response body will be empty.\n\nThis endpoint allows the addition of a user to the delivery crew group.\n\n#### Request Body\n\n- username (string, required): The username of the user to be added to the delivery crew group.\n    \n\n#### Response\n\nThe response is a JSON object with the following schema:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"response\": {\n      \"type\": \"string\"\n      \"description\":\"An Interpolated string confirming the username and that the permissions for the user have been modified to add those associated with the delivery crew role.\"\n    }\n  }\n}\n\n ```"
+							},
+							"response": []
+						},
+						{
+							"name": "Remove A User to Delivery Crew Group",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "value",
+											"value": "{{manager_token}}",
+											"type": "string"
+										},
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "AUTH",
+										"value": "{{manager_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/groups/delivery-crew/user/{{employee_id}}?format=json",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"groups",
+										"delivery-crew",
+										"user",
+										"{{employee_id}}"
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								},
+								"description": "### Delete User from Delivery Crew Group\n\nThe endpoint sends an HTTP DELETE request to remove a user with a specific employee ID from the \"delivery-crew\" group.\n\n## Request\n\n#### Request Parameters\n\n- `employee_id` (path parameter) : The ID of the employee to be removed from the managers group.\n    \n\n## Response\n\nThe response returned has a status code of 200 and a content type of \"application/json\". Below is the JSON schema for the response:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"response\": {\n      \"type\": \"string\"\n    }\n  }\n}\n\n ```"
+							},
+							"response": []
+						},
+						{
+							"name": "Remove A User to Manager's Group",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "value",
+											"value": "{{manager_token}}",
+											"type": "string"
+										},
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "AUTH",
+										"value": "{{manager_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/groups/managers/user/{{employee_id}}",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"groups",
+										"managers",
+										"user",
+										"{{employee_id}}"
+									]
+								},
+								"description": "### Delete User from Managers Group\n\nThis endpoint makes an HTTP DELETE request to remove a user from the managers group.\n\n## Requesr\n\n#### Request Parameters\n\n- `employee_id` (path parameter) : The ID of the employee to be removed from the managers group.\n    \n\n## Response\n\nThe response returned has a status code of 200 and a content type of \"application/json\". Below is the JSON schema for the response:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"response\": {\n      \"type\": \"string\"\n    }\n  }\n}\n\n ```"
+							},
+							"response": []
+						}
+					],
+					"description": "This sub-collection of request require that the token being passed has been assiged the role of `manager.` Please note for the purpose of this demo project, there is public token for use. API Consumers/Testers can either use the `manager_token` variable in places that call for the `user_token` variable, or Add the Manager Role to their own conumerr account via this [request](https://www.postman.com/blackberry-py-dev/little-lemon-meta-apis-final-terry-brooks-jr/request/3uou1hm/add-a-user-to-manager-s-group?action=share&source=copy-link&creator=20135114&ctx=documentation).",
+					"auth": {
+						"type": "apikey",
+						"apikey": [
+							{
+								"key": "value",
+								"value": "{{user_token}}",
+								"type": "string"
+							},
+							{
+								"key": "key",
+								"value": "Authorization",
+								"type": "string"
+							}
+						]
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									"const token = pm.collectionVariables.get('user_token')",
+									"",
+									"if (token in [undefined, NaN, \"\"]){",
+									"    var username  = pm.variables.get('username')",
+									"    var password  = pm.variables.get('password')",
+									"    var base_url = pm.collectionVariables.get('base_url')",
+									"",
+									"    if(username && password) {",
+									"",
+									"    let postRequest = {",
+									"        url: `${base_url}/token/login/`,",
+									"        method: 'POST',",
+									"        body: {",
+									"            username: username,",
+									"            password: password",
+									"        }",
+									"    };",
+									"    pm.sendRequest(postRequest, (error,resp) => {",
+									"        if(error){",
+									"            console.log(error)",
+									"        }",
+									"        let jsonResp = resp.json()",
+									"        const newAuthToken = jsonResp.body['auth_token']",
+									"        ",
+									"        pm.collectionVariables.set('user_token', newAuthToken)",
+									"    })} else {",
+									"        console.log('No user_token value entered, and unable to auto-generate token due to no Username or Password. Please Either Generate a Token using the request located in User Management > Token Management > Create Token or enter a Username and Password into the enviornment Variables and re-run this request.')",
+									"",
+									"    }",
+									"}"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Token Management",
+					"item": [
+						{
+							"name": "Create Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const jsonData = pm.response.json();",
+											"const authToken = jsonData['auth_token']",
+											"",
+											"",
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"pm.test(\"Auth Token Created\", function () {",
+											"    pm.expect(jsonData).to.have.property('auth_token')",
+											"    if (authToken){",
+											"        const formattedToken = `TOKEN ${authToken}`",
+											"            pm.collectionVariables.set(\"user_token\", formattedToken);",
+											"    };",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"username\": \"{{username}}\",\n\t\"password\": \"{{password}}\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/token/login/?format=json",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"token",
+										"login",
+										""
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								},
+								"description": "The endpoint allows users to make an HTTP POST request to log in and obtain a token.\n\n### Request Body\n\n_Note: The request body is paramerterized. If your user was created via the_ [<i>Create New User</i>](https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/request/20135114-f11c33e2-c4f9-4a73-967e-876ee228af4e?action=share&source=copy-link&creator=20135114&ctx=documentation) _request in Postman, these keys will be replaced with the correct vakuyeds_\n\n- username (string): The username of the user.\n    \n- password (string): The password of the user.\n    \n\n### Response\n\nThe response of the request is a JSON object with a status code of 200 and a content type of application/json. The response schema for the 200 status code is as follows:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"auth_token\": {\n            \"type\": \"string\"\n        }\n    }\n}\n\n ```"
+							},
+							"response": [
+								{
+									"name": "Bad Create Token",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"username\": \"{{ username}}\",\n    \"password\": \"{{ password }}\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/token/login/?format=json",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"token",
+												"login",
+												""
+											],
+											"query": [
+												{
+													"key": "format",
+													"value": "json"
+												}
+											]
+										}
+									},
+									"status": "Bad Request",
+									"code": 400,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 04 Nov 2024 12:47:12 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "68"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										},
+										{
+											"key": "Allow",
+											"value": "POST, OPTIONS"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "no-cache,no-store"
+										},
+										{
+											"key": "Expires",
+											"value": "Thu, 01 Jan 1970 00:00:00 GMT"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Set-Cookie",
+											"value": ".Tunnels.Relay.WebForwarding.Cookies=CfDJ8E0FHi1JCVNKrny-ARCYWxMZHhlZo8udsuw5QLzAcSA2xpk7pIflRCqwQtvoYe5wBahwUB4hdT4sE3tfRKexhW70YllP2HsvIYezn-B1yAivr8RDQWIHfBiA0gEO-zdOm74X5HhH2Mf183wBI0hNQ16INWklYYBGlSvei7Z71Zo3hn5_-9_a8ofE5p2Bx-juXGzUJjWk6uDsJrZA_r_gR54z8j5efGIuuww7ymaODPtGVVaB6_fGBrN61qHubKHJfNBMicKL9IU4KjTIC_mrWF37qNT3tn-iaOHdCJP0B9dwZaiZhP2OS16jQc0b0XUd8qsp4OA5As2AhJpytvDzXUbGiW5fYdNw5bsZ_FxTTfKiqgLS_lD1M5GetKbZGPM8nLtjN23YqtRO-xge8Dk-9mU8AevlTOB_d4-NVBue-mCbrW3KcmPoDes64_Zi5ZK4Q7I5d3K3_mUp0ri3VQELjKQ4lK8FdLmvw0LoZK9ny_6EZR6COFmt7eeLOOVHnJbu33OzTtRuF2sVaAaWfYnbkE6gV-F1rtY6B_EI2jgr2S3oKQokLZdlbhSTOSDJdXONA4f5VLwGjoFDAflf7TQprRU6eez2YK_JT1MAKNqLpBJ9r-eNMhTRcFfDPhkf5WH2v9LD80nWu8nUhB6NHORptkZ3qFJ_HKlf4v-3a5nTegY9QNc2xByHdnTnbAOSS3zJtisXNFcq2_W-aVfXaPPZDTziVf78oEHejmWB-t3_G-6hDhy9k0xjWlDyxKBvzxfPl6saCURyAMN3hfT6bnIdySddv4o0MwaHgvBQ5_reS6CsUGoDBUc0DkKgxyVA4tvP6uNH5Q659RCb6L91ALXOfZPI8GglnM6zGVfAuNuquyhhuopdkLUvhPMHKpOaiCEPWWS2AP5jn_WXwOxQ_AskT1BbzOruvKZ5Rh1kb0oiqu31; path=/; secure; samesite=none"
+										},
+										{
+											"key": "Vary",
+											"value": "Accept, Cookie"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "RateLimit-Limit",
+											"value": "HttpRequestRatePerPort:1500/m"
+										},
+										{
+											"key": "RateLimit-Remaining",
+											"value": "HttpRequestRatePerPort:1499"
+										},
+										{
+											"key": "RateLimit-Reset",
+											"value": "HttpRequestRatePerPort:46s"
+										},
+										{
+											"key": "X-Report-Abuse",
+											"value": "https://msrc.microsoft.com/report/abuse"
+										},
+										{
+											"key": "x-ms-ratelimit-limit",
+											"value": "1500"
+										},
+										{
+											"key": "x-ms-ratelimit-remaining",
+											"value": "1495"
+										},
+										{
+											"key": "x-ms-ratelimit-used",
+											"value": "5"
+										},
+										{
+											"key": "x-ms-ratelimit-reset",
+											"value": "0"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "same-origin"
+										},
+										{
+											"key": "Cross-Origin-Opener-Policy",
+											"value": "same-origin"
+										},
+										{
+											"key": "X-Robots-Tag",
+											"value": "noindex, nofollow"
+										},
+										{
+											"key": "VsSaaS-Request-Id",
+											"value": "58c597d0-b8c2-40b5-952c-2c59bfdb1816"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "X-Served-By",
+											"value": "tunnels-prod-rel-use-v3-cluster"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"non_field_errors\": [\n        \"Unable to log in with provided credentials.\"\n    ]\n}"
+								},
+								{
+									"name": "Successful  Create Token",
+									"originalRequest": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"username\": \"{{ username }}\",\n    \"password\": \"{{ password }}\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{base_url}}/token/login/?format=json",
+											"host": [
+												"{{base_url}}"
+											],
+											"path": [
+												"token",
+												"login",
+												""
+											],
+											"query": [
+												{
+													"key": "format",
+													"value": "json"
+												}
+											]
+										}
+									},
+									"status": "OK",
+									"code": 200,
+									"_postman_previewlanguage": "json",
+									"header": [
+										{
+											"key": "Date",
+											"value": "Mon, 04 Nov 2024 12:54:01 GMT"
+										},
+										{
+											"key": "Content-Type",
+											"value": "application/json"
+										},
+										{
+											"key": "Content-Length",
+											"value": "57"
+										},
+										{
+											"key": "Connection",
+											"value": "keep-alive"
+										},
+										{
+											"key": "Allow",
+											"value": "POST, OPTIONS"
+										},
+										{
+											"key": "Cache-Control",
+											"value": "no-cache,no-store"
+										},
+										{
+											"key": "Expires",
+											"value": "Thu, 01 Jan 1970 00:00:00 GMT"
+										},
+										{
+											"key": "Pragma",
+											"value": "no-cache"
+										},
+										{
+											"key": "Set-Cookie",
+											"value": ".Tunnels.Relay.WebForwarding.Cookies=CfDJ8E0FHi1JCVNKrny-ARCYWxM65dVKbyOmru2i3_wtrfocweTQ4F9PVdPj5djsBHL3K58QREtkboMTB6kxpzIjL--LC3w-83XVa5scPba6uaV_wdCgEVecvIkzXbHlP2q6w8vjEg0guHWDKPC_abcYrbXZ8-I8hoE5lNoj_XlAUqqx_CE4B9CKEVb5pkPuLRa6JVPQXVaG6G3zFbZ0ARihEXj7MNlUYZiLHM9MlzO_rPe9DColYecj0vP-zk5msio9depQRHrYO1a8bleqlpKinBVgcEcG69OH-l58kOnyo44EHMdeiaZFZdt2BDkwGYtj-vUwjKblAcz7MVP3iTMN3Z414_1S9pmhgZAILcHqx0Ux0a0V39V8Sg9UvWewmWROzBsl9k64HHNPPFGkbtR3uHR4k-alSBwAiWL2pUp3FH4M9wlOh8q2fUrbnQYFDwgUAUhFVhen9DQQXUne3_baaB0g_1tUwOvIUtSC_kcJID454m-aKvB0Z-4ZLgGED9AMTIp7MVx9ywRv3r1vzbth7TkVg4ROZv1VPxAxStVtChAChQ2rzh5zdOAWW5h24yWGR8zDsw4ad-GtoWUEl75NwgXYCJDx7hp3c_JQuo7eHGK0YsJbtp1wMceVRDJSxTTLPzMn4U5G1yVXWczFQbl1dOq8at-dAPMKh4-lzveT-BaRh9g0sVtzesPsC47UWjCl0Y7rgstPodnURlW7_wl8m1xH0Q3Umr-AhzPkrYh3eHnUogwJinKtBTC7aUZIaVHKU-VEPwdSAoNbvfD_TvEe7sgRzMnZfD6QxHNozX3gzMGCwJyEKPLbmf0WySAsBLD8XyDndrqxva_opW9sCIhLpmnMfHQgyNqWlyVuB3SXtjHMj_6szJKj42q4ZjBULO6n7tcVDROLUtPrKLmm0HN4sS7tHeh7htzSkBJ0QntA0fdQ; path=/; secure; samesite=none"
+										},
+										{
+											"key": "Vary",
+											"value": "Accept, Cookie"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "X-Content-Type-Options",
+											"value": "nosniff"
+										},
+										{
+											"key": "RateLimit-Limit",
+											"value": "HttpRequestRatePerPort:1500/m"
+										},
+										{
+											"key": "RateLimit-Remaining",
+											"value": "HttpRequestRatePerPort:1499"
+										},
+										{
+											"key": "RateLimit-Reset",
+											"value": "HttpRequestRatePerPort:2s"
+										},
+										{
+											"key": "X-Report-Abuse",
+											"value": "https://msrc.microsoft.com/report/abuse"
+										},
+										{
+											"key": "x-ms-ratelimit-limit",
+											"value": "1500"
+										},
+										{
+											"key": "x-ms-ratelimit-remaining",
+											"value": "1496"
+										},
+										{
+											"key": "x-ms-ratelimit-used",
+											"value": "4"
+										},
+										{
+											"key": "x-ms-ratelimit-reset",
+											"value": "0"
+										},
+										{
+											"key": "X-Frame-Options",
+											"value": "DENY"
+										},
+										{
+											"key": "Referrer-Policy",
+											"value": "same-origin"
+										},
+										{
+											"key": "Cross-Origin-Opener-Policy",
+											"value": "same-origin"
+										},
+										{
+											"key": "X-Robots-Tag",
+											"value": "noindex, nofollow"
+										},
+										{
+											"key": "VsSaaS-Request-Id",
+											"value": "3893156b-656f-40b1-87a1-2bbc3fbde833"
+										},
+										{
+											"key": "Strict-Transport-Security",
+											"value": "max-age=31536000; includeSubDomains"
+										},
+										{
+											"key": "X-Served-By",
+											"value": "tunnels-prod-rel-use-v3-cluster"
+										}
+									],
+									"cookie": [],
+									"body": "{\n    \"auth_token\": \"7a3f0369c3f417f67cfbc4a154b6328926893ce7\"\n}"
+								}
+							]
+						},
+						{
+							"name": "Delete Token",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"",
+											"pm.test(\"Status code is 204\", function () {",
+											"    pm.response.to.have.status(204);",
+											"    if (pm.response.code === 204){",
+											"        console.log('User Token Deleted from API - Removing Corrsponding collection Variable')",
+											"        pm.collectionVariables.unset('user_token')",
+											"    }",
+											"});"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "apikey",
+									"apikey": [
+										{
+											"key": "value",
+											"value": "{{user_token}}",
+											"type": "string"
+										},
+										{
+											"key": "key",
+											"value": "Authorization",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/token/logout/?format=json",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"token",
+										"logout",
+										""
+									],
+									"query": [
+										{
+											"key": "format",
+											"value": "json"
+										}
+									]
+								},
+								"description": "### Token Logout\n\nThis endpoint is used to log out and invalidate the user's token.\n\n#### Request Body\n\nThis API request does not require any request body parameters.\n\n#### Response\n\nUpon successful execution, the server will return a status code of 204 and a Content-Type of text/xml. The response body will be empty as no specific key-value pairs are returned.\n\nThe JSON schema for the response will be as follows:\n\n``` json\n{}\n\n ```"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Current User Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User Details Returned\", function () {",
+									"    pm.expect(jsonData).to.have.property('email')",
+									"    pm.expect(jsonData).to.have.property('id')",
+									"    pm.expect(jsonData).to.have.property('username')",
+									"  ",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/users/users/me/?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"users",
+								"me",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "### Get Current User Details\n\nThis endpoint retrieves the details of the current user.\n\n#### Request Body\n\nThis request does not require a request body.\n\n#### Response Body\n\n- `email` (string, optional): The email address of the user.\n    \n- `id` (integer): The unique identifier of the user.\n    \n- `username` (string, optional): The username of the user."
+					},
+					"response": []
+				},
+				{
+					"name": "Create New User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"",
+									"pm.test(\"User Details Returned\", function () {",
+									"    pm.expect(jsonData).to.have.property('email')",
+									"    pm.expect(jsonData).to.have.property('id')",
+									"    pm.expect(jsonData).to.have.property('username')",
+									"  ",
+									"});",
+									"",
+									"pm.test(\"Successful POST request\", function () {",
+									"    if (pm.expect(pm.response.code).to.be.oneOf([201, 202])){",
+									"        console.log('User successfully created. Adding Username and Passeword to collection variables.')",
+									"    const requestBody = pm.request.body.raw;",
+									"    const parsedBody = JSON.parse(requestBody);",
+									"    let username =  parsedBody['username']",
+									"    let password = parsedBody['password']",
+									"    pm.collectionVariables.set('username', username)",
+									"    pm.collectionVariables.set('password', password)",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.test(\"Check if required keys exist in request body\", function () {",
+									"    const requestBody = pm.request.body.raw;",
+									"    const parsedBody = JSON.parse(requestBody);",
+									"",
+									"    const requiredKeys = [\"username\", \"email\", \"password\"]; ",
+									"",
+									"    for (const key of requiredKeys) {",
+									"        pm.expect(parsedBody).to.have.property(key);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"AhkashaAPI\",\n    \"password\": \"TestTestNow\",\n    \"email\": \"QA@example.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/users/users/?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"users",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "### POST /api/users/users/?format=json\n\nThis endpoint allows the creation of a new user with the provided credentials.\n\n**NOTE:** If user is successfully created, the password and username are added the collection variables to expidiate the creation of the a user token via the [Create Token ](https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/request/20135114-eb0a0a69-2038-4872-805d-0ced95efde0a?action=share&source=copy-link&creator=20135114&ctx=documentation) request.\n\n#### Request Body\n\n- `username` (string, required): The username for the new user.\n    \n- `password` (string, required): The password for the new user.\n    \n- `email` (string, required): The email address for the new user.\n    \n\n#### Response\n\nThe response is in JSON format and includes the following fields:\n\n- `email` (string): The email address of the created user.\n    \n- `username` (string): The username of the created user.\n    \n- `id` (integer): The unique identifier of the created user.\n    \n\n#### Response JSON Schema\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"email\": { \"type\": \"string\" },\n    \"username\": { \"type\": \"string\" },\n    \"id\": { \"type\": \"integer\" }\n  }\n}\n\n ```"
+					},
+					"response": []
+				}
+			],
+			"description": "The endpoints along the `/api/users` route are dedicated the creation, authentication, and modification of API Consumer Accounts. With the exception of the [Create New User](https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/request/20135114-f11c33e2-c4f9-4a73-967e-876ee228af4e?action=share&source=copy-link&creator=20135114&ctx=documentation) request, allow other endpoints require a token be passed in the request headers.\n\nThis set of endpoints have two sub collections for discoverability, and navigation:\n\n- [Token Managemement](https://www.postman.com/blackberry-py-dev/little-lemon-meta-apis-final-terry-brooks-jr/folder/4zautdl/token-management?action=share&source=copy-link&creator=20135114&ctx=documentation)\n    \n- [Requires Manager Permissions](https://www.postman.com/blackberry-py-dev/little-lemon-meta-apis-final-terry-brooks-jr/folder/fump7n5/required-management-permissions?action=share&source=copy-link&creator=20135114&ctx=documentation)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Order Management",
+			"item": [
+				{
+					"name": "Create New Order",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			],
+			"description": "The /api/orders endpoints support the complete lifecycle of an order, covering actions from initial creation to updates and final deletion. This API provides comprehensive tools for managing all aspects of order processing."
+		},
+		{
+			"name": "Inventory Management",
+			"item": [
+				{
+					"name": "Create Menu Item",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.test(\"Check if required keys exist in request body\", function () {",
+									"    const requestBody = pm.request.body.raw;",
+									"    const parsedBody = JSON.parse(requestBody);",
+									"",
+									"    const requiredKeys = [\"title\", \"price\", \"featured\", 'category']; ",
+									"",
+									"    for (const key of requiredKeys) {",
+									"        pm.expect(parsedBody).to.have.property(key);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 202]);",
+									"});",
+									"",
+									"pm.test('Recieved Item Details', function () {",
+									"     var responseJSON = pm.response.json();",
+									"     ",
+									"     pm.expect(responseJSON).to.be.an('object');",
+									"",
+									"     pm.expect(responseJSON).to.have.property('item_id').that.is.a('number');",
+									"     pm.expect(responseJSON).to.have.property('title').that.is.a('string');",
+									"     pm.expect(responseJSON).to.have.property('price').that.is.a('string');",
+									"     pm.expect(responseJSON).to.have.property('featured').that.is.a('boolean');",
+									"     pm.expect(responseJSON).to.have.property('category').that.is.a('string');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\":\"Halal Lamb Over Rice\",\n    \"price\": 8.95,\n    \"featured\": true,\n    \"category\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/menu-items/?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"menu-items",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "## Update Menu Item Details\n\nThis API endpoint is used to update the details of a specific menu item.\n\n### Request\n\n- Method: PATCH\n    \n- URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`\n    \n- Headers:\n    \n    - Content-Type: application/json\n        \n- Body:\n    \n    - title (string, required): The updated title of the menu item.\n        \n    - price (float, required): The updated price of the menu item.\n        \n    - featured (boolean, required): Indicates if the menu item is featured.\n        \n    - category (Int, required): The updated category of the menu item.\n        \n        - Available Categories:\n            \n\n| Category ID | Name |\n| --- | --- |\n| 1 | entree |\n| 2 | beverage |\n| 3 | side-order |\n| 4 | dessert |\n\n### Response\n\nThe response for this request is a JSON object with the following schema:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"count\": {\n            \"type\": \"integer\"\n        },\n        \"next\": {\n            \"type\": \"string\"\n        },\n        \"previous\": {\n            \"type\": \"string\"\n        },\n        \"results\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"item_id\": {\n                        \"type\": \"integer\"\n                    },\n                    \"title\": {\n                        \"type\": \"string\"\n                    },\n                    \"price\": {\n                        \"type\": \"string\"\n                    },\n                    \"featured\": {\n                        \"type\": \"boolean\"\n                    },\n                    \"category\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        }\n    }\n}\n\n ```\n\nThe response includes the count of items, pagination links, and an array of updated menu item details including the item_id, title, price, featured, and category."
+					},
+					"response": []
+				},
+				{
+					"name": "Update A Single Menu Item",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"",
+									"pm.test(\"PATCH request has at least 1 field key\", function () {",
+									"    const requestBody = pm.request.body;",
+									"    const parsedBody = JSON.parse(requestBody);",
+									"",
+									"    const requiredKeys = [\"title\", \"price\", \"featured\", \"category\"];",
+									"",
+									"    const bodyKeys = Object.keys(parsedBody);",
+									"    const commonKeys = requiredKeys.filter(key => bodyKeys.includes(key));",
+									"",
+									"    pm.expect(commonKeys.length).to.be.greaterThan(0);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful PUT request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 200, 204]);",
+									"});",
+									"",
+									"pm.test(\"Updated Item Returned\", function () {",
+									"    const resp = pm.response.json()",
+									"     pm.expect(resp).to.be.an('object');",
+									"     pm.expect(resp).to.have.property('item_id');",
+									"     pm.expect(resp).to.have.property('title');",
+									"     pm.expect(resp).to.have.property('price');",
+									"     pm.expect(resp).to.have.property('featured');",
+									"     pm.expect(resp).to.have.property('category');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"category\": 4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/menu-items/{{item_id}}?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"menu-items",
+								"{{item_id}}"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "## Update Menu Item Details\n\nThis API endpoint is used to update the details of a specific menu item.\n\n### Request\n\n- Method: PATCH\n    \n- URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`\n    \n- Headers:\n    \n    - Content-Type: application/json\n        \n- Body:\n    \n\n> At Least 1 of the Fields Must Be Present in request Body \n  \n\n- title (string, optional): The updated title of the menu item.\n    \n- price (float, optional): The updated price of the menu item.\n    \n- featured (boolean, optional): Indicates if the menu item is featured.\n    \n- category (Int, optional): The updated category of the menu item.\n    \n\nAvailable Categories:\n\n| Category ID | Name |\n| --- | --- |\n| 1 | entree |\n| 2 | beverage |\n| 3 | side-order |\n| 4 | dessert |\n\n### Response\n\nThe response for this request is a JSON object with the following schema:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"count\": {\n            \"type\": \"integer\"\n        },\n        \"next\": {\n            \"type\": \"string\"\n        },\n        \"previous\": {\n            \"type\": \"string\"\n        },\n        \"results\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"item_id\": {\n                        \"type\": \"integer\"\n                    },\n                    \"title\": {\n                        \"type\": \"string\"\n                    },\n                    \"price\": {\n                        \"type\": \"string\"\n                    },\n                    \"featured\": {\n                        \"type\": \"boolean\"\n                    },\n                    \"category\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        }\n    }\n}\n\n ```\n\nThe response includes the count of items, pagination links, and an array of updated menu item details including the item_id, title, price, featured, and category."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Menu-Items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Multiple Menu Items Returned\", function () {",
+									"     var responseData = pm.response.json();",
+									"     pm.expect(responseData.results).to.be.an('array');",
+									"     pm.expect(responseData.results[0]).to.be.an('object');",
+									"     pm.expect(responseData.results.length).to.be.above(1, \"At least two menu items should be returned\");",
+									"});",
+									"",
+									"var template = `",
+									"<script src=\"https://kit.fontawesome.com/58e27c88da.js\" crossorigin=\"anonymous\"></script>",
+									"<style type=\"text/css\">",
+									"    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}",
+									"    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}",
+									"    .tftable tr {background-color:#ffffff;}",
+									"    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}",
+									"    .tftable tr:hover {background-color:#e0ffff;}",
+									"</style>",
+									"",
+									"<table class=\"tftable\" border=\"1\">",
+									"    <tr>",
+									"        <th>Item ID</th>",
+									"        <th>Title</th>",
+									"        <th>Price</th>",
+									"        <th>Featured</th>",
+									"        <th>Category</th>",
+									"    </tr>",
+									"    {{#each response.results}}",
+									"        <tr>",
+									"            <td>{{product_sku}}</td>",
+									"            <td>{{product_name}}</td>",
+									"            <td>{{price_per_item}}</td>",
+									"            <td>",
+									"            {{# if featured}} <i class=\"fa-solid fa-check\"></i> {/if}",
+									"            <td>{{category}}</td>",
+									"        </tr>",
+									"    {{/each}}",
+									"</table>",
+									"`;",
+									"",
+									"function constructVisualizerPayload() {",
+									"    return {response: pm.response.json()}",
+									"}",
+									"",
+									"pm.visualizer.set(template, constructVisualizerPayload());"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/menu-items/?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"menu-items",
+								""
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "### Retrieve Menu Items\n\nThis endpoint makes an HTTP GET request to retrieve a list of menu items in JSON format.\n\n#### Request\n\nThe request does not require a request body. It retrieves menu items using the following endpoint:\n\n`GET /api/menu-items/?format=json`\n\n#### Response\n\nThe response will be a JSON object representing the menu items, following the schema below:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"count\": {\n      \"type\": \"integer\"\n    },\n    \"next\": {\n      \"type\": \"string\"\n    },\n    \"previous\": {\n      \"type\": \"null\"\n    },\n    \"results\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"product_sku\": {\n            \"type\": \"integer\"\n          },\n          \"category\": {\n            \"type\": \"string\"\n          },\n          \"product_name\": {\n            \"type\": \"string\"\n          },\n          \"price_per_item\": {\n            \"type\": \"integer\"\n          }\n        }\n      }\n    }\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Menu Item Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Recieved Item Details', function () {",
+									"     var responseJSON = pm.response.json();",
+									"     ",
+									"     pm.expect(responseJSON).to.be.an('object');",
+									"",
+									"     pm.expect(responseJSON).to.have.property('product_sku').that.is.a('number');",
+									"     pm.expect(responseJSON).to.have.property('product_name').that.is.a('string');",
+									"     pm.expect(responseJSON).to.have.property('price_per_item').that.is.a('string');",
+									"     pm.expect(responseJSON).to.have.property('featured').that.is.a('boolean');",
+									"     pm.expect(responseJSON).to.have.property('category').that.is.a('string');",
+									"     pm.expect(responseJSON).to.have.property('on_sale').that.is.a('boolean');",
+									"});",
+									"var template = `",
+									"<style type=\"text/css\">",
+									"    .tftable {font-size:14px;color:#333333;width:100%;border-width: 1px;border-color: #87ceeb;border-collapse: collapse;}",
+									"    .tftable th {font-size:18px;background-color:#87ceeb;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;text-align:left;}",
+									"    .tftable tr {background-color:#ffffff;}",
+									"    .tftable td {font-size:14px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}",
+									"    .tftable tr:hover {background-color:#e0ffff;}",
+									"</style>",
+									"",
+									"<table class=\"tftable\" border=\"1\">",
+									"    <tr>",
+									"        <th>Item ID</th>",
+									"        <th>Title</th>",
+									"        <th>Price</th>",
+									"        <th>Featured</th>",
+									"        <th>Category</th>",
+									"    </tr>",
+									"    <tr>",
+									"        <td>{{response.product_sku}}</td>",
+									"        <td>{{response.product_name}}</td>",
+									"        <td>{{response.price_per_item}}</td>",
+									"        <td>{{response.featured}}</td>",
+									"        <td>{{response.category}}</td>",
+									"    </tr>",
+									"</table>",
+									"`;",
+									"",
+									"function constructVisualizerPayload() {",
+									"    return {response: pm.response.json()}",
+									"}",
+									"",
+									"pm.visualizer.set(template, constructVisualizerPayload());"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/menu-items/{{item_id}}?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"menu-items",
+								"{{item_id}}"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "This endpoint retrieves details of a specific menu item identified by its `item_id`.\n\n## Request\n\n### Request URL\n\n- Method: GET\n    \n- URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`\n    \n\n### Request Body\n\nThis request does not require a request body.\n\n## Response\n\n### Response Body\n\nThe response is in JSON format and includes the following fields:\n\n- `product_sku`(number): The unique identifier of the menu item.\n    \n- `product_name` (string): The title or name of the menu item.\n    \n- `price_per_item` (string): The price of the menu item.\n    \n- `featured` (boolean): Indicates whether the menu item is featured\n    \n- `on_sale` (boolean): Indicates whether the menu item is on sale.\n    \n- `category` (string): The category to which the menu item belongs.\n    \n- `nutritional_facts` (object): Contains the nutritonal value data of the menu item\n    \n    - `calories`(number): The number of calories of the menu item measured in calorie.\n        \n    - `sugar` (number): The number of grams of sugar in the menu item.\n        \n    - `protein` (number): The number of grams of protein in the menu item.\n        \n    - `carbohydrates` (number): The number of milligrams of carbohydrates inthe menu item.\n        \n    - `saturated_fat` (number): TThe number of grams of saturated fat in the menu item.\n        \n- `allergens` (object): Contains common food allegens of the menu item\n    \n    - `contains_dairy` (boolean): Indicates whether the menu item contains milk or dairy ingredients.\n        \n    - `contains_gluten` (boolean): Indicates whether the menu item contains gluten-based ingredients.\n        \n    - `contains_treenuts` (boolean): Indicates whether the menu item contains treenut ingredients.\n        \n\n### JSON Schema\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"product_sku\": {\n            \"type\": \"number\"\n        },\n        \"category\": {\n            \"type\": \"string\"\n        },\n        \"product_name\": {\n            \"type\": \"string\"\n        },\n        \"price_per_item\": {\n            \"type\": \"string\"\n        },\n        \"featured\": {\n            \"type\": \"boolean\"\n        },\n        \"on_sale\": {\n            \"type\": \"boolean\"\n        },\n        \"nutritional_facts\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"calories\": {\n                    \"type\": \"number\"\n                },\n                \"sugar\": {\n                    \"type\": \"string\"\n                },\n                \"protein\": {\n                    \"type\": \"string\"\n                },\n                \"carbohydrates\": {\n                    \"type\": \"string\"\n                },\n                \"saturated_fat\": {\n                    \"type\": \"string\"\n                }\n            }\n        },\n        \"allergens\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"contains_dairy\": {\n                    \"type\": \"boolean\"\n                },\n                \"contains_gluten\": {\n                    \"type\": \"boolean\"\n                },\n                \"contains_treenuts\": {\n                    \"type\": \"boolean\"\n                }\n            }\n        }\n    }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Menu Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful DELETE request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 202, 200,204]);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/menu-items/{{item_id}}?format=json",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"menu-items",
+								"{{item_id}}"
+							],
+							"query": [
+								{
+									"key": "format",
+									"value": "json"
+								}
+							]
+						},
+						"description": "## Update Menu Item Details\n\nThis API endpoint is used to update the details of a specific menu item.\n\n### Request\n\n- Method: PATCH\n    \n- URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`\n    \n- Headers:\n    \n    - Content-Type: application/json\n        \n- Body:\n    \n    - title (string, required): The updated title of the menu item.\n        \n    - price (float, required): The updated price of the menu item.\n        \n    - featured (boolean, required): Indicates if the menu item is featured.\n        \n    - category (Int, required): The updated category of the menu item.\n        \n        - Avaiolabe\n            \n\n### Response\n\nThe response for this request is a JSON object with the following schema:\n\n``` json\n{\n    \"type\": \"object\",\n    \"properties\": {\n        \"count\": {\n            \"type\": \"integer\"\n        },\n        \"next\": {\n            \"type\": \"string\"\n        },\n        \"previous\": {\n            \"type\": \"string\"\n        },\n        \"results\": {\n            \"type\": \"array\",\n            \"items\": {\n                \"type\": \"object\",\n                \"properties\": {\n                    \"item_id\": {\n                        \"type\": \"integer\"\n                    },\n                    \"title\": {\n                        \"type\": \"string\"\n                    },\n                    \"price\": {\n                        \"type\": \"string\"\n                    },\n                    \"featured\": {\n                        \"type\": \"boolean\"\n                    },\n                    \"category\": {\n                        \"type\": \"string\"\n                    }\n                }\n            }\n        }\n    }\n}\n\n ```\n\nThe response includes the count of items, pagination links, and an array of updated menu item details including the item_id, title, price, featured, and category."
+					},
+					"response": []
+				}
+			],
+			"description": "The `/api/menu-items` endpoints facilitate full inventory management, enabling operations such as adding new items, updating existing stock details, and removing items as needed. This API provides a robust set of tools to handle every stage of inventory control."
+		},
+		{
+			"name": "Cart Management",
+			"item": [
+				{
+					"name": "Get Current User's Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var responseData = pm.response.json();",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"    pm.test(\"User Cart Content and Summary Returned\", function () {",
+									"         pm.expect(responseData.cart.summary).to.be.an('object');",
+									"         pm.expect(responseData.cart.contents).to.be.an('array');",
+									"    });",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cart/menu-items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"menu-items"
+							]
+						},
+						"description": "### Retrieve Current User's Cart\n\nThis endpoint makes an HTTP GET request to retrieve the menu items in the cart.\n\n#### Request Body\n\nThis request does not require a request body.\n\n#### Response Body\n\n- `cart` (object)\n    \n    - `summary` (object)\n        \n        - `customer` (string, optional): The customer's name.\n            \n        - `number_of_items` (integer): The total number of items in the cart.\n            \n        - `total_cost_USD` (string, optional): The total cost in USD.\n            \n    - `contents` (array)\n        \n        - `product_name` (string): The name of the product.\n            \n        - `product_sku` (integer): The SKU of the product.\n            \n        - `quantity` (integer): The quantity of the product in the cart.\n            \n        - `price per item` (integer): The price per item.\n            \n        - `price` (integer): The total price for the quantity of the product.\n            \n\n#### Example\n\n``` json\n{\n  \"cart\": {\n    \"summary\": {\n      \"customer\": \"\",\n      \"number_of_items\": 0,\n      \"total_cost_USD\": \"\"\n    },\n    \"contents\": [\n      {\n        \"product_name\": \"\",\n        \"product_sku\": 0,\n        \"quantity\": 0,\n        \"price per item\": 0,\n        \"price\": 0\n      }\n    ]\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Empty Current User's Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200,204]);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/cart/menu-items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"menu-items"
+							]
+						},
+						"description": "### Delete Menu Items from Cart\n\nThis endpoint is used to delete menu items from the cart.\n\n#### Request\n\n- Method: DELETE\n    \n- URL: `{{base_url}}/api/cart/menu-items`\n    \n\n#### Response\n\nThe response for this request is an empty JSON object with a status code of 200.\n\n``` json\n{\n  \"type\": \"object\"\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Item to Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Successful POST request\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([201, 204,200]);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const requestBody = pm.request.body.raw;",
+									"const parsedBody = JSON.parse(requestBody);",
+									"pm.test(\"Check if required keys exist in request body\", function () {",
+									"\tconst requiredKeys = [\"item_id\", \"quantity\"];",
+									"\tfor (const key of requiredKeys) {",
+									"\t\tpm.expect(parsedBody).to.have.property(key);",
+									"\t}",
+									"});",
+									"",
+									"pm.test('Quantity is greater than zero', function () {",
+									"\tpm.expect(parsedBody.quantity).to.be.above(0)",
+									"})"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"item_id\": 156,\n    \"quantity\":  1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/menu-items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"menu-items"
+							]
+						},
+						"description": "This HTTP POST request is used to add menu items to the cart. The request should be sent to {{base_url}}/api/cart/menu-items with a JSON payload in the raw request body type.\n\n### Request\n\n- Method: POST\n    \n- Endpoint: {{base_url}}/api/cart/menu-items\n    \n\n#### Request Body\n\nThe payload should include:\n\n- `item_id` (number): The ID of the menu item to be added to the cart.\n    \n- `quantity` (number): The quantity of the menu item to be added to the cart.\n    \n\n### Response\n\n- Status: 201\n    \n- Content-Type: application/json\n    \n\nThe expected output of the request is a 201 status code indicating that the menu item has been successfully added to the cart. The response body is in JSON format and may contain additional details about the added menu item.\n\n#### Response\n\nThe response is a JSON object with the following schema:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n  \"response\" : {\n \"type\": \"string\"\n \"description\":\"An Interpolated messages confirming the number, item title and user whose cart has recieved the items\" \n \n  }\n}\n\n ```"
+					},
+					"response": []
+				}
+			],
+			"description": "The `/api/cart` endpoints provide comprehensive cart management functionality, supporting actions from adding items to the cart, updating item quantities, and removing items as needed. This API enables a seamless shopping cart experience, allowing users to efficiently manage their selections before checkout."
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{user_token}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Authorization",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://m366g28j-8000.use.devtunnels.ms",
+			"type": "string"
+		},
+		{
+			"key": "user_token",
+			"value": ""
+		},
+		{
+			"key": "manager_token",
+			"value": "b2f48578ad9c91282bc47213537ae5b1bef8796a",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": ""
+		},
+		{
+			"key": "password",
+			"value": ""
+		}
+	]
+}

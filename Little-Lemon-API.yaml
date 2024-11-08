@@ -1,0 +1,1557 @@
+openapi: 3.0.0
+info:
+  title: Little Lemon API
+  description: |-
+    # API Documentation
+
+    ## Overview
+
+    The **Little Lemon API** project is Terry Brooks' final project for Meta's **APIs course on Coursera**. For more information about the course, visit the [Coursera course page](https://www.coursera.org/learn/apis/home/info). The source code for this project is available on [GitHub](https://github.com/Terry-BrooksJr/little-lemon) for learning purposes.
+
+    > **Note**: Although this project is open-source, please remember Coursera’s academic honesty policy. Students should refer to the [Coursera Honor Code](https://www.coursera.support/s/article/209818863-Coursera-Honor-Code?) for guidelines on using publicly available materials. 
+      
+
+    The **Little Lemon API** offers a range of endpoints for user and management tasks in a restaurant management context, including user registration, token generation, and basic managerial operations.
+
+    ---
+
+    ## Getting Started Guide
+
+    To start using the **Little Lemon API**, follow these steps:
+
+    1. **Register as a customer**: Begin by creating an account using the **Create New User** request. This request can be found in the **User Management** folder of the Postman collection.
+        
+    2. **Testing Managerial Tasks**: If you wish to explore endpoints with managerial permissions, you can use the provided dummy user token, which is pre-configured for manager-level access. Note that this token does not include staff or admin permissions.
+        
+
+    > Dummy API Manager Token Can Be Accesed in the Collection Enviornment Under the `manager_token` . 
+      
+
+    1. **Authentication**: Most endpoints require a Bearer Token in the `Authorization` header. The token is stored as a parameterized variable, `user_token`, in the Postman Workspace. Use the **Create Token** request, found in **User Management > Token Management**, to generate this token. This request will automatically update the `user_token` variable in the collection’s variables.
+        
+    2. **Browsable API Interface**: You can also access the **Django Rest Framework Browsable API** by visiting [https://api.little-lemon.xyz/](https://api.little-lemon.xyz/).
+        
+
+    ---
+
+    ## Authentication
+
+    The Little Lemon API uses **Bearer Token** authentication for secure access to most of its endpoints. Tokens are generated via the **Token Management** endpoint in the **User Management** folder and must be included in each request header using `Authorization: Bearer` . The token is automatically managed as the `user_token` variable within the Postman workspace.
+
+    **Authentication Error**: If a token is missing, malformed, or invalid, the API returns an HTTP 401 Unauthorized response.
+
+    ---
+
+    ## Rate and Usage Limits
+
+    **Educational Use Only**: This API is intended exclusively for educational purposes. The **Little Lemon** brand, related products, domains, logos, names, places, and events represented within this API are purely fictitious. Any resemblance to real companies, organizations, people, or events is coincidental.
+
+    **Rate Limits**:
+
+    - **Authenticated Requests**: Maximum of 12 requests per minute.
+        
+    - **Unauthenticated Requests**: Maximum of 4 requests per minute.
+        
+    - **User Creations**: Limited to 10 new users per day to manage account usage.
+        
+
+    If rate limits are exceeded, requests will return an HTTP 429 Too Many Requests status code.
+
+    ---
+
+    ## 503 Response
+
+    An HTTP 503 response indicates a temporary spike in traffic. Typically, the server will recover within five minutes. If the issue persists or you receive other 5XX errors, please contact support.
+
+    ---
+
+    ## Need Some Help?
+
+    For further assistance, refer to the following resources:
+
+    - [Create a Github Issue](https://github.com/Terry-BrooksJr/little-lemon/issues/new)
+        
+    - Email Developer at [API@little-lemon.xyz](https://mailto:API@little-lemon.xyz)
+        
+
+    For code samples and additional resources, check out our GitHub repository or see the Postman collection for practical request examples.
+  version: 1.0.0
+  contact:
+    name: Terry Brooks
+    url: 'https://www.brooksjr.com'
+    email: terry.brooks@blackberry-py.dev
+  termsOfService: 'https://cdn.little-lemon.xyz/terms_of_service.html'
+  license:
+    url: 'https://github.com/Terry-BrooksJr/little-lemon/blob/dd21648f5faa3a86dd2f7dfbd0cf2a2c395bdddd/LICENSE'
+    name: GNU General Public License v3.0
+servers:
+  - url: 'http://{{base_url}}'
+components:
+  securitySchemes:
+    Authorization:
+      name: apiKey
+      type: apiKey
+      in: header
+security:
+  - apikeyAuth: []
+tags:
+  - name: User Management
+    description: |-
+      The endpoints along the `/api/users` route are dedicated the creation, authentication, and modification of API Consumer Accounts. With the exception of the [Create New User](https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/request/20135114-f11c33e2-c4f9-4a73-967e-876ee228af4e?action=share&source=copy-link&creator=20135114&ctx=documentation) request, allow other endpoints require a token be passed in the request headers.
+
+      This set of endpoints have two sub collections for discoverability, and navigation:
+
+      - [Token Managemement](https://www.postman.com/blackberry-py-dev/little-lemon-meta-apis-final-terry-brooks-jr/folder/4zautdl/token-management?action=share&source=copy-link&creator=20135114&ctx=documentation)
+          
+      - [Requires Manager Permissions](https://www.postman.com/blackberry-py-dev/little-lemon-meta-apis-final-terry-brooks-jr/folder/fump7n5/required-management-permissions?action=share&source=copy-link&creator=20135114&ctx=documentation)
+  - name: User Management > Requires Management Permissions
+    description: 'This sub-collection of request require that the token being passed has been assiged the role of `manager.` Please note for the purpose of this demo project, there is public token for use. API Consumers/Testers can either use the `manager_token` variable in places that call for the `user_token` variable, or Add the Manager Role to their own conumerr account via this [request](https://www.postman.com/blackberry-py-dev/little-lemon-meta-apis-final-terry-brooks-jr/request/3uou1hm/add-a-user-to-manager-s-group?action=share&source=copy-link&creator=20135114&ctx=documentation).'
+  - name: User Management > Token Management
+  - name: Order Management
+    description: 'The /api/orders endpoints support the complete lifecycle of an order, covering actions from initial creation to updates and final deletion. This API provides comprehensive tools for managing all aspects of order processing.'
+  - name: Inventory Management
+    description: 'The `/api/menu-items` endpoints facilitate full inventory management, enabling operations such as adding new items, updating existing stock details, and removing items as needed. This API provides a robust set of tools to handle every stage of inventory control.'
+  - name: Cart Management
+    description: 'The `/api/cart` endpoints provide comprehensive cart management functionality, supporting actions from adding items to the cart, updating item quantities, and removing items as needed. This API enables a seamless shopping cart experience, allowing users to efficiently manage their selections before checkout.'
+paths:
+  /api/groups/delivery-crew/user:
+    get:
+      tags:
+        - User Management > Requires Management Permissions
+      summary: Get All Managers
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - User Management > Requires Management Permissions
+      summary: Add A User to Delivery Crew Group
+      description: |-
+        The endpoint allows the addition of a user to the delivery crew group
+
+        ### Request Body
+
+        - username (string, required): The username of the user to be added to the delivery crew group.
+            
+
+        ### Response
+
+        Upon successful execution, the response will have a status code of 201 and a content type of application/json. The response body will be empty.
+
+        This endpoint allows the addition of a user to the delivery crew group.
+
+        #### Request Body
+
+        - username (string, required): The username of the user to be added to the delivery crew group.
+            
+
+        #### Response
+
+        The response is a JSON object with the following schema:
+
+        ``` json
+        {
+          "type": "object",
+          "properties": {
+            "response": {
+              "type": "string"
+              "description":"An Interpolated string confirming the username and that the permissions for the user have been modified to add those associated with the delivery crew role."
+            }
+          }
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                username: terry-brooks
+      parameters:
+        - name: AUTH
+          in: header
+          schema:
+            type: string
+          example: '{{manager_token}}'
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/groups/managers/user:
+    post:
+      tags:
+        - User Management > Requires Management Permissions
+      summary: Add A User to Manager's Group
+      description: |-
+        ### POST /api/groups/managers/user
+
+        This endpoint is used to add a user to the managers group.
+
+        #### Request Body
+
+        - username (string, required): The username of the user to be added to the managers group.
+            
+
+        Example:
+
+        ``` json
+        {
+            "username": "barry_backend"
+        }
+
+         ```
+
+        #### Response
+
+        The response is in JSON format and has a status code of 201 (Created).
+
+        #### JSON Schema
+
+        ``` json
+        {
+            "type": "object",
+            "properties": {
+                "response": {
+                    "type": "string",
+                    "description": "Interpolated string providing confirmation of the role addition and the update to their perissions."
+                }
+            }
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                username: '{{username}}'
+      security: []
+      parameters:
+        - name: AUTH
+          in: header
+          schema:
+            type: string
+          example: '{{manager_token}}'
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '401':
+          description: Unauthorized
+          headers:
+            Date:
+              schema:
+                type: string
+                example: 'Mon, 04 Nov 2024 13:56:32 GMT'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '58'
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Allow:
+              schema:
+                type: string
+                example: 'GET, POST, DELETE, HEAD, OPTIONS'
+            Cache-Control:
+              schema:
+                type: string
+                example: 'no-cache,no-store'
+            Expires:
+              schema:
+                type: string
+                example: 'Thu, 01 Jan 1970 00:00:00 GMT'
+            Pragma:
+              schema:
+                type: string
+                example: no-cache
+            Set-Cookie:
+              schema:
+                type: string
+                example: .Tunnels.Relay.WebForwarding.Cookies=CfDJ8E0FHi1JCVNKrny-ARCYWxPhwedq-T6f_yEk-g8kzhqGsvLqLugl-CR8KyJA1qgZmeD3WCAWWfDOAtTACxqIPYQgIAL4fI2nH4EauJPkgQsOIopXOVWmVlyziPS1BKcmkmPxwX4gYUvbKndNwl15_DQdcGCHRuJFbV9wDLbywk6Wps1h8DhVeJBvQMj2nCBHuSjuxsOHC5fYCqHdbGCbM4swPcCPoaiifj2ZlQ-JFBhi0dVVcQsiOBPoHi_L9yU4MzeAeWiHp08Ny3ZPPv_Lb2H9YSy0nWy6rWbq18oOxrZnpNW6QtrL3WRgmmiR2U4IpTG74Iq4XlM0YvwFH_A_X_tNAs9-sLkarVdgRAtRh8-DE1voL2uthOHW8kAAEB_k_PqIsEVCJ4JKiVcYt4ysQY-00GQjj_WgiQ_EPu1sbf2Wu7rxV-fh7rHkVKSPUVWIgRQ40c7wlabNnp5laRYqDB4vGzsso_w950FC3ku6Zw_pTWaDv_KWuD_0GDvYlFGQU9538kqmSZxeqL2sy7elXlgczJ3syzlvlv85jEjbujB6YoRewc5aaPIHVWaZbrx8tgpZgDp82X39r45c_iN1sgpy9-BpRZnkZ5S_Z6ruflaega0uuyJti9nnacZWgy968QnnOlDRSJKCBEFI7K1_uBmf87x89ggUKeKfbXf-P6xpqaUAzCv98q5b4LzPUI3_4lyPrZ-5iicvPYu6MadStSiZqZg8oleUTqnhH0FZfhBWnP3651zU14KcHD19hqwPHFcaP85LVDXYtbKUTTqIBpZcjiMy_Fa2Bztm4fv0sTQVBesXWK_SapqqDb3CKdmhAH86vl7HexAZqjtNkEN5UTkMH_koBDPWhbuS0UvIgs5StaZ_LpFK07zZ0uwZrt2hDBjpdYzj5Tpipz8PpyAnPn25l_yqW8CCKERf3ZzzQiwu; path=/; secure; samesite=none
+            Vary:
+              schema:
+                type: string
+                example: Accept
+            WWW-Authenticate:
+              schema:
+                type: string
+                example: Token
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+            RateLimit-Limit:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:1500/m'
+            RateLimit-Remaining:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:1499'
+            RateLimit-Reset:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:36s'
+            X-Report-Abuse:
+              schema:
+                type: string
+                example: 'https://msrc.microsoft.com/report/abuse'
+            x-ms-ratelimit-limit:
+              schema:
+                type: integer
+                example: '1500'
+            x-ms-ratelimit-remaining:
+              schema:
+                type: integer
+                example: '1494'
+            x-ms-ratelimit-used:
+              schema:
+                type: integer
+                example: '6'
+            x-ms-ratelimit-reset:
+              schema:
+                type: integer
+                example: '0'
+            X-Frame-Options:
+              schema:
+                type: string
+                example: DENY
+            Referrer-Policy:
+              schema:
+                type: string
+                example: same-origin
+            Cross-Origin-Opener-Policy:
+              schema:
+                type: string
+                example: same-origin
+            X-Robots-Tag:
+              schema:
+                type: string
+                example: 'noindex, nofollow'
+            VsSaaS-Request-Id:
+              schema:
+                type: string
+                example: 1d55acc0-0b44-42b4-b402-b454ea05b87a
+            Strict-Transport-Security:
+              schema:
+                type: string
+                example: max-age=31536000; includeSubDomains
+            X-Served-By:
+              schema:
+                type: string
+                example: tunnels-prod-rel-use-v3-cluster
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                detail: Authentication credentials were not provided.
+  '/api/groups/delivery-crew/user/{employee_id}':
+    delete:
+      tags:
+        - User Management > Requires Management Permissions
+      summary: Remove A User to Delivery Crew Group
+      description: |-
+        ### Delete User from Delivery Crew Group
+
+        The endpoint sends an HTTP DELETE request to remove a user with a specific employee ID from the "delivery-crew" group.
+
+        ## Request
+
+        #### Request Parameters
+
+        - `employee_id` (path parameter) : The ID of the employee to be removed from the managers group.
+            
+
+        ## Response
+
+        The response returned has a status code of 200 and a content type of "application/json". Below is the JSON schema for the response:
+
+        ``` json
+        {
+          "type": "object",
+          "properties": {
+            "response": {
+              "type": "string"
+            }
+          }
+        }
+
+         ```
+      security: []
+      parameters:
+        - name: AUTH
+          in: header
+          schema:
+            type: string
+          example: '{{manager_token}}'
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+        - name: employee_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  '/api/groups/managers/user/{employee_id}':
+    delete:
+      tags:
+        - User Management > Requires Management Permissions
+      summary: Remove A User to Manager's Group
+      description: |-
+        ### Delete User from Managers Group
+
+        This endpoint makes an HTTP DELETE request to remove a user from the managers group.
+
+        ## Requesr
+
+        #### Request Parameters
+
+        - `employee_id` (path parameter) : The ID of the employee to be removed from the managers group.
+            
+
+        ## Response
+
+        The response returned has a status code of 200 and a content type of "application/json". Below is the JSON schema for the response:
+
+        ``` json
+        {
+          "type": "object",
+          "properties": {
+            "response": {
+              "type": "string"
+            }
+          }
+        }
+
+         ```
+      security: []
+      parameters:
+        - name: AUTH
+          in: header
+          schema:
+            type: string
+          example: '{{manager_token}}'
+        - name: employee_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /token/login/:
+    post:
+      tags:
+        - User Management > Token Management
+      summary: Create Token
+      description: |-
+        The endpoint allows users to make an HTTP POST request to log in and obtain a token.
+
+        ### Request Body
+
+        _Note: The request body is paramerterized. If your user was created via the_ [<i>Create New User</i>](https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/request/20135114-f11c33e2-c4f9-4a73-967e-876ee228af4e?action=share&source=copy-link&creator=20135114&ctx=documentation) _request in Postman, these keys will be replaced with the correct vakuyeds_
+
+        - username (string): The username of the user.
+            
+        - password (string): The password of the user.
+            
+
+        ### Response
+
+        The response of the request is a JSON object with a status code of 200 and a content type of application/json. The response schema for the 200 status code is as follows:
+
+        ``` json
+        {
+            "type": "object",
+            "properties": {
+                "auth_token": {
+                    "type": "string"
+                }
+            }
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                username: '{{username}}'
+                password: '{{password}}'
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: 'Mon, 04 Nov 2024 12:54:01 GMT'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '57'
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Allow:
+              schema:
+                type: string
+                example: 'POST, OPTIONS'
+            Cache-Control:
+              schema:
+                type: string
+                example: 'no-cache,no-store'
+            Expires:
+              schema:
+                type: string
+                example: 'Thu, 01 Jan 1970 00:00:00 GMT'
+            Pragma:
+              schema:
+                type: string
+                example: no-cache
+            Set-Cookie:
+              schema:
+                type: string
+                example: .Tunnels.Relay.WebForwarding.Cookies=CfDJ8E0FHi1JCVNKrny-ARCYWxM65dVKbyOmru2i3_wtrfocweTQ4F9PVdPj5djsBHL3K58QREtkboMTB6kxpzIjL--LC3w-83XVa5scPba6uaV_wdCgEVecvIkzXbHlP2q6w8vjEg0guHWDKPC_abcYrbXZ8-I8hoE5lNoj_XlAUqqx_CE4B9CKEVb5pkPuLRa6JVPQXVaG6G3zFbZ0ARihEXj7MNlUYZiLHM9MlzO_rPe9DColYecj0vP-zk5msio9depQRHrYO1a8bleqlpKinBVgcEcG69OH-l58kOnyo44EHMdeiaZFZdt2BDkwGYtj-vUwjKblAcz7MVP3iTMN3Z414_1S9pmhgZAILcHqx0Ux0a0V39V8Sg9UvWewmWROzBsl9k64HHNPPFGkbtR3uHR4k-alSBwAiWL2pUp3FH4M9wlOh8q2fUrbnQYFDwgUAUhFVhen9DQQXUne3_baaB0g_1tUwOvIUtSC_kcJID454m-aKvB0Z-4ZLgGED9AMTIp7MVx9ywRv3r1vzbth7TkVg4ROZv1VPxAxStVtChAChQ2rzh5zdOAWW5h24yWGR8zDsw4ad-GtoWUEl75NwgXYCJDx7hp3c_JQuo7eHGK0YsJbtp1wMceVRDJSxTTLPzMn4U5G1yVXWczFQbl1dOq8at-dAPMKh4-lzveT-BaRh9g0sVtzesPsC47UWjCl0Y7rgstPodnURlW7_wl8m1xH0Q3Umr-AhzPkrYh3eHnUogwJinKtBTC7aUZIaVHKU-VEPwdSAoNbvfD_TvEe7sgRzMnZfD6QxHNozX3gzMGCwJyEKPLbmf0WySAsBLD8XyDndrqxva_opW9sCIhLpmnMfHQgyNqWlyVuB3SXtjHMj_6szJKj42q4ZjBULO6n7tcVDROLUtPrKLmm0HN4sS7tHeh7htzSkBJ0QntA0fdQ; path=/; secure; samesite=none
+            Vary:
+              schema:
+                type: string
+                example: 'Accept, Cookie'
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+            RateLimit-Limit:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:1500/m'
+            RateLimit-Remaining:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:1499'
+            RateLimit-Reset:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:2s'
+            X-Report-Abuse:
+              schema:
+                type: string
+                example: 'https://msrc.microsoft.com/report/abuse'
+            x-ms-ratelimit-limit:
+              schema:
+                type: integer
+                example: '1500'
+            x-ms-ratelimit-remaining:
+              schema:
+                type: integer
+                example: '1496'
+            x-ms-ratelimit-used:
+              schema:
+                type: integer
+                example: '4'
+            x-ms-ratelimit-reset:
+              schema:
+                type: integer
+                example: '0'
+            X-Frame-Options:
+              schema:
+                type: string
+                example: DENY
+            Referrer-Policy:
+              schema:
+                type: string
+                example: same-origin
+            Cross-Origin-Opener-Policy:
+              schema:
+                type: string
+                example: same-origin
+            X-Robots-Tag:
+              schema:
+                type: string
+                example: 'noindex, nofollow'
+            VsSaaS-Request-Id:
+              schema:
+                type: string
+                example: 3893156b-656f-40b1-87a1-2bbc3fbde833
+            Strict-Transport-Security:
+              schema:
+                type: string
+                example: max-age=31536000; includeSubDomains
+            X-Served-By:
+              schema:
+                type: string
+                example: tunnels-prod-rel-use-v3-cluster
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                auth_token: 7a3f0369c3f417f67cfbc4a154b6328926893ce7
+        '400':
+          description: Bad Request
+          headers:
+            Date:
+              schema:
+                type: string
+                example: 'Mon, 04 Nov 2024 12:47:12 GMT'
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Content-Length:
+              schema:
+                type: integer
+                example: '68'
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Allow:
+              schema:
+                type: string
+                example: 'POST, OPTIONS'
+            Cache-Control:
+              schema:
+                type: string
+                example: 'no-cache,no-store'
+            Expires:
+              schema:
+                type: string
+                example: 'Thu, 01 Jan 1970 00:00:00 GMT'
+            Pragma:
+              schema:
+                type: string
+                example: no-cache
+            Set-Cookie:
+              schema:
+                type: string
+                example: .Tunnels.Relay.WebForwarding.Cookies=CfDJ8E0FHi1JCVNKrny-ARCYWxMZHhlZo8udsuw5QLzAcSA2xpk7pIflRCqwQtvoYe5wBahwUB4hdT4sE3tfRKexhW70YllP2HsvIYezn-B1yAivr8RDQWIHfBiA0gEO-zdOm74X5HhH2Mf183wBI0hNQ16INWklYYBGlSvei7Z71Zo3hn5_-9_a8ofE5p2Bx-juXGzUJjWk6uDsJrZA_r_gR54z8j5efGIuuww7ymaODPtGVVaB6_fGBrN61qHubKHJfNBMicKL9IU4KjTIC_mrWF37qNT3tn-iaOHdCJP0B9dwZaiZhP2OS16jQc0b0XUd8qsp4OA5As2AhJpytvDzXUbGiW5fYdNw5bsZ_FxTTfKiqgLS_lD1M5GetKbZGPM8nLtjN23YqtRO-xge8Dk-9mU8AevlTOB_d4-NVBue-mCbrW3KcmPoDes64_Zi5ZK4Q7I5d3K3_mUp0ri3VQELjKQ4lK8FdLmvw0LoZK9ny_6EZR6COFmt7eeLOOVHnJbu33OzTtRuF2sVaAaWfYnbkE6gV-F1rtY6B_EI2jgr2S3oKQokLZdlbhSTOSDJdXONA4f5VLwGjoFDAflf7TQprRU6eez2YK_JT1MAKNqLpBJ9r-eNMhTRcFfDPhkf5WH2v9LD80nWu8nUhB6NHORptkZ3qFJ_HKlf4v-3a5nTegY9QNc2xByHdnTnbAOSS3zJtisXNFcq2_W-aVfXaPPZDTziVf78oEHejmWB-t3_G-6hDhy9k0xjWlDyxKBvzxfPl6saCURyAMN3hfT6bnIdySddv4o0MwaHgvBQ5_reS6CsUGoDBUc0DkKgxyVA4tvP6uNH5Q659RCb6L91ALXOfZPI8GglnM6zGVfAuNuquyhhuopdkLUvhPMHKpOaiCEPWWS2AP5jn_WXwOxQ_AskT1BbzOruvKZ5Rh1kb0oiqu31; path=/; secure; samesite=none
+            Vary:
+              schema:
+                type: string
+                example: 'Accept, Cookie'
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+            RateLimit-Limit:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:1500/m'
+            RateLimit-Remaining:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:1499'
+            RateLimit-Reset:
+              schema:
+                type: string
+                example: 'HttpRequestRatePerPort:46s'
+            X-Report-Abuse:
+              schema:
+                type: string
+                example: 'https://msrc.microsoft.com/report/abuse'
+            x-ms-ratelimit-limit:
+              schema:
+                type: integer
+                example: '1500'
+            x-ms-ratelimit-remaining:
+              schema:
+                type: integer
+                example: '1495'
+            x-ms-ratelimit-used:
+              schema:
+                type: integer
+                example: '5'
+            x-ms-ratelimit-reset:
+              schema:
+                type: integer
+                example: '0'
+            X-Frame-Options:
+              schema:
+                type: string
+                example: DENY
+            Referrer-Policy:
+              schema:
+                type: string
+                example: same-origin
+            Cross-Origin-Opener-Policy:
+              schema:
+                type: string
+                example: same-origin
+            X-Robots-Tag:
+              schema:
+                type: string
+                example: 'noindex, nofollow'
+            VsSaaS-Request-Id:
+              schema:
+                type: string
+                example: 58c597d0-b8c2-40b5-952c-2c59bfdb1816
+            Strict-Transport-Security:
+              schema:
+                type: string
+                example: max-age=31536000; includeSubDomains
+            X-Served-By:
+              schema:
+                type: string
+                example: tunnels-prod-rel-use-v3-cluster
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                non_field_errors:
+                  - Unable to log in with provided credentials.
+  /token/logout/:
+    post:
+      tags:
+        - User Management > Token Management
+      summary: Delete Token
+      description: |-
+        ### Token Logout
+
+        This endpoint is used to log out and invalidate the user's token.
+
+        #### Request Body
+
+        This API request does not require any request body parameters.
+
+        #### Response
+
+        Upon successful execution, the server will return a status code of 204 and a Content-Type of text/xml. The response body will be empty as no specific key-value pairs are returned.
+
+        The JSON schema for the response will be as follows:
+
+        ``` json
+        {}
+
+         ```
+      requestBody:
+        content: {}
+      security: []
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '204':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/users/users/me/:
+    get:
+      tags:
+        - User Management
+      summary: Get Current User Details
+      description: |-
+        ### Get Current User Details
+
+        This endpoint retrieves the details of the current user.
+
+        #### Request Body
+
+        This request does not require a request body.
+
+        #### Response Body
+
+        - `email` (string, optional): The email address of the user.
+            
+        - `id` (integer): The unique identifier of the user.
+            
+        - `username` (string, optional): The username of the user.
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/users/users/:
+    post:
+      tags:
+        - User Management
+      summary: Create New User
+      description: |-
+        ### POST /api/users/users/?format=json
+
+        This endpoint allows the creation of a new user with the provided credentials.
+
+        **NOTE:** If user is successfully created, the password and username are added the collection variables to expidiate the creation of the a user token via the [Create Token ](https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/request/20135114-eb0a0a69-2038-4872-805d-0ced95efde0a?action=share&source=copy-link&creator=20135114&ctx=documentation) request.
+
+        #### Request Body
+
+        - `username` (string, required): The username for the new user.
+            
+        - `password` (string, required): The password for the new user.
+            
+        - `email` (string, required): The email address for the new user.
+            
+
+        #### Response
+
+        The response is in JSON format and includes the following fields:
+
+        - `email` (string): The email address of the created user.
+            
+        - `username` (string): The username of the created user.
+            
+        - `id` (integer): The unique identifier of the created user.
+            
+
+        #### Response JSON Schema
+
+        ``` json
+        {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "username": { "type": "string" },
+            "id": { "type": "integer" }
+          }
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                username: AhkashaAPI
+                password: TestTestNow
+                email: QA@example.com
+      security: []
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/menu-items/:
+    post:
+      tags:
+        - Inventory Management
+      summary: Create Menu Item
+      description: |-
+        ## Update Menu Item Details
+
+        This API endpoint is used to update the details of a specific menu item.
+
+        ### Request
+
+        - Method: PATCH
+            
+        - URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`
+            
+        - Headers:
+            
+            - Content-Type: application/json
+                
+        - Body:
+            
+            - title (string, required): The updated title of the menu item.
+                
+            - price (float, required): The updated price of the menu item.
+                
+            - featured (boolean, required): Indicates if the menu item is featured.
+                
+            - category (Int, required): The updated category of the menu item.
+                
+                - Available Categories:
+                    
+
+        | Category ID | Name |
+        | --- | --- |
+        | 1 | entree |
+        | 2 | beverage |
+        | 3 | side-order |
+        | 4 | dessert |
+
+        ### Response
+
+        The response for this request is a JSON object with the following schema:
+
+        ``` json
+        {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item_id": {
+                                "type": "integer"
+                            },
+                            "title": {
+                                "type": "string"
+                            },
+                            "price": {
+                                "type": "string"
+                            },
+                            "featured": {
+                                "type": "boolean"
+                            },
+                            "category": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+         ```
+
+        The response includes the count of items, pagination links, and an array of updated menu item details including the item_id, title, price, featured, and category.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                title: Halal Lamb Over Rice
+                price: 8.95
+                featured: true
+                category: 1
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    get:
+      tags:
+        - Inventory Management
+      summary: Get All Menu-Items
+      description: |-
+        ### Retrieve Menu Items
+
+        This endpoint makes an HTTP GET request to retrieve a list of menu items in JSON format.
+
+        #### Request
+
+        The request does not require a request body. It retrieves menu items using the following endpoint:
+
+        `GET /api/menu-items/?format=json`
+
+        #### Response
+
+        The response will be a JSON object representing the menu items, following the schema below:
+
+        ``` json
+        {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "integer"
+            },
+            "next": {
+              "type": "string"
+            },
+            "previous": {
+              "type": "null"
+            },
+            "results": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "product_sku": {
+                    "type": "integer"
+                  },
+                  "category": {
+                    "type": "string"
+                  },
+                  "product_name": {
+                    "type": "string"
+                  },
+                  "price_per_item": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+
+         ```
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  '/api/menu-items/{item_id}':
+    patch:
+      tags:
+        - Inventory Management
+      summary: Update A Single Menu Item
+      description: |-
+        ## Update Menu Item Details
+
+        This API endpoint is used to update the details of a specific menu item.
+
+        ### Request
+
+        - Method: PATCH
+            
+        - URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`
+            
+        - Headers:
+            
+            - Content-Type: application/json
+                
+        - Body:
+            
+
+        > At Least 1 of the Fields Must Be Present in request Body 
+          
+
+        - title (string, optional): The updated title of the menu item.
+            
+        - price (float, optional): The updated price of the menu item.
+            
+        - featured (boolean, optional): Indicates if the menu item is featured.
+            
+        - category (Int, optional): The updated category of the menu item.
+            
+
+        Available Categories:
+
+        | Category ID | Name |
+        | --- | --- |
+        | 1 | entree |
+        | 2 | beverage |
+        | 3 | side-order |
+        | 4 | dessert |
+
+        ### Response
+
+        The response for this request is a JSON object with the following schema:
+
+        ``` json
+        {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item_id": {
+                                "type": "integer"
+                            },
+                            "title": {
+                                "type": "string"
+                            },
+                            "price": {
+                                "type": "string"
+                            },
+                            "featured": {
+                                "type": "boolean"
+                            },
+                            "category": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+         ```
+
+        The response includes the count of items, pagination links, and an array of updated menu item details including the item_id, title, price, featured, and category.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                category: 4
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+        - name: item_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    get:
+      tags:
+        - Inventory Management
+      summary: Get Menu Item Details
+      description: |-
+        This endpoint retrieves details of a specific menu item identified by its `item_id`.
+
+        ## Request
+
+        ### Request URL
+
+        - Method: GET
+            
+        - URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`
+            
+
+        ### Request Body
+
+        This request does not require a request body.
+
+        ## Response
+
+        ### Response Body
+
+        The response is in JSON format and includes the following fields:
+
+        - `product_sku`(number): The unique identifier of the menu item.
+            
+        - `product_name` (string): The title or name of the menu item.
+            
+        - `price_per_item` (string): The price of the menu item.
+            
+        - `featured` (boolean): Indicates whether the menu item is featured
+            
+        - `on_sale` (boolean): Indicates whether the menu item is on sale.
+            
+        - `category` (string): The category to which the menu item belongs.
+            
+        - `nutritional_facts` (object): Contains the nutritonal value data of the menu item
+            
+            - `calories`(number): The number of calories of the menu item measured in calorie.
+                
+            - `sugar` (number): The number of grams of sugar in the menu item.
+                
+            - `protein` (number): The number of grams of protein in the menu item.
+                
+            - `carbohydrates` (number): The number of milligrams of carbohydrates inthe menu item.
+                
+            - `saturated_fat` (number): TThe number of grams of saturated fat in the menu item.
+                
+        - `allergens` (object): Contains common food allegens of the menu item
+            
+            - `contains_dairy` (boolean): Indicates whether the menu item contains milk or dairy ingredients.
+                
+            - `contains_gluten` (boolean): Indicates whether the menu item contains gluten-based ingredients.
+                
+            - `contains_treenuts` (boolean): Indicates whether the menu item contains treenut ingredients.
+                
+
+        ### JSON Schema
+
+        ``` json
+        {
+            "type": "object",
+            "properties": {
+                "product_sku": {
+                    "type": "number"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "product_name": {
+                    "type": "string"
+                },
+                "price_per_item": {
+                    "type": "string"
+                },
+                "featured": {
+                    "type": "boolean"
+                },
+                "on_sale": {
+                    "type": "boolean"
+                },
+                "nutritional_facts": {
+                    "type": "object",
+                    "properties": {
+                        "calories": {
+                            "type": "number"
+                        },
+                        "sugar": {
+                            "type": "string"
+                        },
+                        "protein": {
+                            "type": "string"
+                        },
+                        "carbohydrates": {
+                            "type": "string"
+                        },
+                        "saturated_fat": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "allergens": {
+                    "type": "object",
+                    "properties": {
+                        "contains_dairy": {
+                            "type": "boolean"
+                        },
+                        "contains_gluten": {
+                            "type": "boolean"
+                        },
+                        "contains_treenuts": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        }
+
+         ```
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+        - name: item_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Inventory Management
+      summary: Delete Menu Item
+      description: |-
+        ## Update Menu Item Details
+
+        This API endpoint is used to update the details of a specific menu item.
+
+        ### Request
+
+        - Method: PATCH
+            
+        - URL: `{{base_url}}/api/menu-items/{{item_id}}?format=json`
+            
+        - Headers:
+            
+            - Content-Type: application/json
+                
+        - Body:
+            
+            - title (string, required): The updated title of the menu item.
+                
+            - price (float, required): The updated price of the menu item.
+                
+            - featured (boolean, required): Indicates if the menu item is featured.
+                
+            - category (Int, required): The updated category of the menu item.
+                
+                - Avaiolabe
+                    
+
+        ### Response
+
+        The response for this request is a JSON object with the following schema:
+
+        ``` json
+        {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "item_id": {
+                                "type": "integer"
+                            },
+                            "title": {
+                                "type": "string"
+                            },
+                            "price": {
+                                "type": "string"
+                            },
+                            "featured": {
+                                "type": "boolean"
+                            },
+                            "category": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+         ```
+
+        The response includes the count of items, pagination links, and an array of updated menu item details including the item_id, title, price, featured, and category.
+      parameters:
+        - name: format
+          in: query
+          schema:
+            type: string
+          example: json
+        - name: item_id
+          in: path
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /api/cart/menu-items:
+    get:
+      tags:
+        - Cart Management
+      summary: Get Current User's Cart
+      description: |-
+        ### Retrieve Current User's Cart
+
+        This endpoint makes an HTTP GET request to retrieve the menu items in the cart.
+
+        #### Request Body
+
+        This request does not require a request body.
+
+        #### Response Body
+
+        - `cart` (object)
+            
+            - `summary` (object)
+                
+                - `customer` (string, optional): The customer's name.
+                    
+                - `number_of_items` (integer): The total number of items in the cart.
+                    
+                - `total_cost_USD` (string, optional): The total cost in USD.
+                    
+            - `contents` (array)
+                
+                - `product_name` (string): The name of the product.
+                    
+                - `product_sku` (integer): The SKU of the product.
+                    
+                - `quantity` (integer): The quantity of the product in the cart.
+                    
+                - `price per item` (integer): The price per item.
+                    
+                - `price` (integer): The total price for the quantity of the product.
+                    
+
+        #### Example
+
+        ``` json
+        {
+          "cart": {
+            "summary": {
+              "customer": "",
+              "number_of_items": 0,
+              "total_cost_USD": ""
+            },
+            "contents": [
+              {
+                "product_name": "",
+                "product_sku": 0,
+                "quantity": 0,
+                "price per item": 0,
+                "price": 0
+              }
+            ]
+          }
+        }
+
+         ```
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    delete:
+      tags:
+        - Cart Management
+      summary: Empty Current User's Cart
+      description: |-
+        ### Delete Menu Items from Cart
+
+        This endpoint is used to delete menu items from the cart.
+
+        #### Request
+
+        - Method: DELETE
+            
+        - URL: `{{base_url}}/api/cart/menu-items`
+            
+
+        #### Response
+
+        The response for this request is an empty JSON object with a status code of 200.
+
+        ``` json
+        {
+          "type": "object"
+        }
+
+         ```
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+    post:
+      tags:
+        - Cart Management
+      summary: Add Item to Cart
+      description: |-
+        This HTTP POST request is used to add menu items to the cart. The request should be sent to {{base_url}}/api/cart/menu-items with a JSON payload in the raw request body type.
+
+        ### Request
+
+        - Method: POST
+            
+        - Endpoint: {{base_url}}/api/cart/menu-items
+            
+
+        #### Request Body
+
+        The payload should include:
+
+        - `item_id` (number): The ID of the menu item to be added to the cart.
+            
+        - `quantity` (number): The quantity of the menu item to be added to the cart.
+            
+
+        ### Response
+
+        - Status: 201
+            
+        - Content-Type: application/json
+            
+
+        The expected output of the request is a 201 status code indicating that the menu item has been successfully added to the cart. The response body is in JSON format and may contain additional details about the added menu item.
+
+        #### Response
+
+        The response is a JSON object with the following schema:
+
+        ``` json
+        {
+          "type": "object",
+          "properties": {
+          "response" : {
+         "type": "string"
+         "description":"An Interpolated messages confirming the number, item title and user whose cart has recieved the items" 
+         
+          }
+        }
+
+         ```
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                item_id: 156
+                quantity: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
