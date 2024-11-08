@@ -29,6 +29,10 @@ isort = "^5.13.2"
 django-pytest = "^0.2.0"
 logtail-python = "^0.3.1"
 gunicorn = "^23.0.0"
+invoke = "^2.2.0"
+whitenoise = "^6.8.2"
+django-bunny = "^1.1.6"
+drf-spectacular = "^0.27.2"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.13.2"

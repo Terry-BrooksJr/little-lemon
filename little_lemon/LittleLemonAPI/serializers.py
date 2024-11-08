@@ -18,7 +18,9 @@ class PriceRounder:
     def round_price(self, instance):
         logger.debug(f"Rounding price for {instance}")
         return round(instance.price, 2)
-
+    
+    def calculate_price(self, quantity, unit_price):
+        return float(quantity) * float(unit_price)
 
 class GroupSerializer(ModelSerializer):
     class Meta:
@@ -131,8 +133,6 @@ class UserSerializer(ModelSerializer):
 
 
 class CartSerializer(PriceRounder, ModelSerializer):
-    cart_id = ReadOnlyField()
-    price = SerializerMethodField(method_name="round_price")
 
     class Meta:
         model = Cart
@@ -140,8 +140,6 @@ class CartSerializer(PriceRounder, ModelSerializer):
 
 
 class OrderSerializer(PriceRounder, ModelSerializer):
-    order_id = ReadOnlyField()
-    price = SerializerMethodField(method_name="round_price")
 
     class Meta:
         model = Order

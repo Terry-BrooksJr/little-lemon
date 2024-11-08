@@ -29,7 +29,7 @@ urlpatterns = [
     re_path(r"^api/", include(LittleLemonAPI.urls)),
     re_path(r"", include("djoser.urls.authtoken")),
     re_path(r"^$", api_root, name="API-Root"),
-    re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework"))
+    re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
 
 

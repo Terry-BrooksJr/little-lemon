@@ -1,0 +1,13 @@
+# invoke.yaml
+debug: true
+# Set default configurations for tasks
+run:
+  echo: true          # Print command before executing it
+  pty: true           # Enable pseudo-terminal (useful for sudo prompts)
+  warn: true          # Continue on non-zero exit codes instead of failing
+
+sudo:
+  prompt: 'Password:'
+
+# Root-level configuration
+search_root: /Users/terry-brooks/GitHub/coursera-meta-api-final/little_lemon/tasks.

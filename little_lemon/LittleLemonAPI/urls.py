@@ -9,6 +9,11 @@ from LittleLemonAPI.views import (
     OrderManagement,
 )
 
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 urlpatterns = [
     re_path(r"^users/", include("djoser.urls")),
     re_path(r"^users/", include("djoser.urls.authtoken")),
@@ -39,6 +44,13 @@ urlpatterns = [
         OrderManagement.as_view(),
         name="Order-Detail-Management",
     ),
+    ]
 
 
+urlpatterns += [
+    re_path(r"^schema$", SpectacularAPIView.as_view(), name="schema"),
+    re_path(
+        r"^swagger$", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger"
+    ),
+    re_path(r"^docs$", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
 ]

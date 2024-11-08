@@ -3,5 +3,14 @@
     "doppler.hover.enable": true,
     "cSpell.words": [
         "CACHEOPS"
-    ]
+    ],
+    "yaml.schemas": {
+        "file:///home/vscode/.vscode-server/extensions/docsmsft.docs-yaml-1.0.1/dist/toc.schema.json": "/toc\\.yml/i",
+        "https://json.schemastore.org/yamllint.json": [
+            "file:///Users/terry-brooks/GitHub/coursera-meta-api-final/little_lemon/tasks/invoke.yaml",
+            "file:///Users/terry-brooks/GitHub/coursera-meta-api-final/little_lemon/tasks/.invoke.yaml"
+        ]
+    },
+    "django.rootDir": "/Users/terry-brooks/GitHub/coursera-meta-api-final/",
+    "django.settingsModule": "/Users/terry-brooks/GitHub/coursera-meta-api-final/little_lemon/little_lemon/settings.py"
 }
