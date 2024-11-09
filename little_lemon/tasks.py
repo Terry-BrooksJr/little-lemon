@@ -43,21 +43,17 @@ def build_docker_image(ctx, file,doppler_token=os.getenv('DOPPLER_TOKEN'), platf
     ctx.run(f"docker buildx build --push -t little-lemon:latest  --file {file} --platform {platform} --build-arg=DOPPLER_TOKEN={doppler_token} .")
 
 @task
-def install_redis_cli(ctx):
-    signMeIn = FailingResponder(
-        pattern=r"Password:\s",
-        response="M0rdS1th",
-    )    
-    ctx.sudo('npm install -g redis-cli', watchers=[signMeIn] )
+def install_redis_cli(ctx):   
+    ctx.run('echo $SU | sudo -S npm install -g redis-cli',pty=True  )
     
     
 @task(install_redis_cli)
 def set_redis_users(ctx, username, password, host, identity):
     redis = Responder(
         pattern=r"dragonfly.yo-momma.net:6379>",
-        response=f"ACL SETUSER {username} on >{password} allkeys +@all"
+        response=f"ACL SETUSER {username} on >{password} allkeys +@all\n",
     )
-    ctx.run("rdcli -h {host} -a {identity} -p 6379", pty=True, watchers=[redis]) 
+    ctx.run(f"rdcli -h {host} -a {identity} -p 6379", pty=True, watchers=[redis]) 
 
 
 @task

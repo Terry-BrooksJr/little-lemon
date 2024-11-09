@@ -12,5 +12,6 @@
         ]
     },
     "django.rootDir": "/Users/terry-brooks/GitHub/coursera-meta-api-final/",
-    "django.settingsModule": "/Users/terry-brooks/GitHub/coursera-meta-api-final/little_lemon/little_lemon/settings.py"
+    "django.settingsModule": "little_lemon.settings",
+    "AREPL.shell_plus": false
 }

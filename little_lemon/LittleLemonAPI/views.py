@@ -18,12 +18,12 @@ from LittleLemonAPI.serializers import (
     OrderSerializer,
     MenuItemDetailSerializer,
 )
+
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from loguru import logger
 import json
 from datetime import datetime
-
-
+from little_lemon.utils.cache import CachedQuerySetMixIn
 @api_view(["GET"])
 @renderer_classes([BrowsableAPIRenderer, JSONRenderer])
 def api_root(request):
@@ -78,7 +78,7 @@ class MyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class MenuItemsListView(ListCreateAPIView):
+class MenuItemsListView(CachedQuerySetMixIn, ListCreateAPIView):
     """
     Menu Items List and Creation API View.
 
@@ -98,8 +98,9 @@ class MenuItemsListView(ListCreateAPIView):
     - **403 Forbidden**: If a non-manager attempts to create a menu item.
     - **400 Bad Request**: If an item creation fails due to invalid data.
     """
-
     queryset = MenuItem.objects.all()
+    primary_model = MenuItem
+    cache_models = [ Group, User ]
     serializer_class = MenuItemSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -112,7 +113,6 @@ class MenuItemsListView(ListCreateAPIView):
         "contains_gluten",
     ]
     search_fields = ["title"]
-
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name="manager").exists():
             logger.warning(f"Unauthorized  POST Request Blocked At {reverse('items-detail')}")
@@ -123,6 +123,7 @@ class MenuItemsListView(ListCreateAPIView):
         try:
             return super().create(request, *args, **kwargs)
         except (IntegrityError, TypeError, KeyError) as e:
+            print(dir(e))
             logger.error(str(e))
             return Response(
                 {"error": "Unable to add menu item", "reason": str(e)},
@@ -130,7 +131,7 @@ class MenuItemsListView(ListCreateAPIView):
             )
 
 
-class MenuItemDetailView(RetrieveUpdateDestroyAPIView):
+class MenuItemDetailView(CachedQuerySetMixIn, RetrieveUpdateDestroyAPIView):
     """
     Menu Item Detail, Update, and Delete API View.
 
@@ -149,6 +150,8 @@ class MenuItemDetailView(RetrieveUpdateDestroyAPIView):
 
     serializer_class = MenuItemDetailSerializer
     queryset = MenuItem.objects.all()
+    primary_model = MenuItem
+    cache_models = [ Group, User ]
     permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = "item_id"
 
@@ -177,7 +180,7 @@ class MenuItemDetailView(RetrieveUpdateDestroyAPIView):
         )
 
 
-class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+class ManagerUserManagement(CachedQuerySetMixIn, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     """
     Manager User Management API View.
 
@@ -196,6 +199,8 @@ class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIVi
     """
 
     queryset = User.objects.all()
+    primary_model = User
+    cache_models = [ Group ]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["username", "first_name", "last_name"]
@@ -250,7 +255,7 @@ class ManagerUserManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIVi
         return Response(final_list, status=status.HTTP_200_OK)
 
 
-class DeliveryCrewUserManagement(
+class DeliveryCrewUserManagement(CachedQuerySetMixIn,
     UpdateModelMixin, DestroyModelMixin, ListCreateAPIView
 ):
     """
@@ -271,6 +276,8 @@ class DeliveryCrewUserManagement(
     """
 
     queryset = User.objects.all()
+    primary_model = User
+    cache_models = [ Group ]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["username", "first_name", "last_name"]
@@ -329,7 +336,7 @@ class DeliveryCrewUserManagement(
         return Response(final_list, status=status.HTTP_200_OK)
 
 
-class CartManagement(RetrieveUpdateDestroyAPIView):
+class CartManagement(CachedQuerySetMixIn, RetrieveUpdateDestroyAPIView):
     """
     User Cart Management API View.
 
@@ -348,6 +355,9 @@ class CartManagement(RetrieveUpdateDestroyAPIView):
     """
 
     queryset = Cart.objects.all()
+    primary_model = Cart
+    cache_models = [ Group ]
+    cache_models = [MenuItem, Group, User ]
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
 
@@ -446,7 +456,7 @@ class CartManagement(RetrieveUpdateDestroyAPIView):
         )
 
 
-class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+class OrderManagement(CachedQuerySetMixIn, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     """
         Order Management API View.
 
@@ -465,7 +475,7 @@ class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
         - Managers can view all orders and perform all actions.
         - Delivery crew can view and update assigned orders.
         - Customers can view and create their orders only.
-    x
+    
         Raises:
         - **403 Forbidden**: If a user tries to perform an unauthorized action.
         - **404 Not Found**: If the specified order does not exist.
@@ -474,6 +484,8 @@ class OrderManagement(UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     """
 
     queryset = Order.objects.all()
+    cache_models = [MenuItem, Group, User, Cart, OrderItem ]
+    primary_model = Order
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
