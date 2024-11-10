@@ -473,6 +473,20 @@ files = [
 Django = ">=4.2"
 
 [[package]]
+name = "django-jazzmin"
+version = "3.0.1"
+description = "Drop-in theme for django admin, that utilises AdminLTE 3 & Bootstrap 4 to make yo' admin look jazzy"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "django_jazzmin-3.0.1-py3-none-any.whl", hash = "sha256:12a0a4c1d4fd09c2eef22acf6a1f03112b515ba695c59faa8ea80efc81c1f21b"},
+    {file = "django_jazzmin-3.0.1.tar.gz", hash = "sha256:67ae148bade41267a09ca8e4352ddefa6121795ebbac238bb9a6564ff841eb1b"},
+]
+
+[package.dependencies]
+django = ">=4.2"
+
+[[package]]
 name = "django-prometheus"
 version = "2.3.1"
 description = "Django middlewares to monitor your application with Prometheus.io."
@@ -1494,4 +1508,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "21f2b9a8bbd9316d3c00dbc0168c297b506950fed38fbf8e668e0a7271d4051b"
+content-hash = "29812a8426d3b8cea146c6495101d6bf5d61fdfa4b91cb95b64068c0ef0b4ae7"

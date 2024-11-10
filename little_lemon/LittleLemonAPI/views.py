@@ -23,7 +23,7 @@ from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from loguru import logger
 import json
 from datetime import datetime
-from little_lemon.utils.cache import CachedQuerySetMixIn
+from little_lemon.utils.cache import CachedResponseMixin
 @api_view(["GET"])
 @renderer_classes([BrowsableAPIRenderer, JSONRenderer])
 def api_root(request):
@@ -44,7 +44,7 @@ def api_root(request):
                     "description": "Manage cart items, add, update, and delete items.",
                 },
             ]
-        }
+        }````````
     )
 
 
@@ -78,7 +78,7 @@ class MyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class MenuItemsListView(CachedQuerySetMixIn, ListCreateAPIView):
+class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
     """
     Menu Items List and Creation API View.
 
@@ -131,7 +131,7 @@ class MenuItemsListView(CachedQuerySetMixIn, ListCreateAPIView):
             )
 
 
-class MenuItemDetailView(CachedQuerySetMixIn, RetrieveUpdateDestroyAPIView):
+class MenuItemDetailView(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
     """
     Menu Item Detail, Update, and Delete API View.
 
@@ -180,7 +180,7 @@ class MenuItemDetailView(CachedQuerySetMixIn, RetrieveUpdateDestroyAPIView):
         )
 
 
-class ManagerUserManagement(CachedQuerySetMixIn, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+class ManagerUserManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     """
     Manager User Management API View.
 
@@ -255,7 +255,7 @@ class ManagerUserManagement(CachedQuerySetMixIn, UpdateModelMixin, DestroyModelM
         return Response(final_list, status=status.HTTP_200_OK)
 
 
-class DeliveryCrewUserManagement(CachedQuerySetMixIn,
+class DeliveryCrewUserManagement(CachedResponseMixin,
     UpdateModelMixin, DestroyModelMixin, ListCreateAPIView
 ):
     """
@@ -336,7 +336,7 @@ class DeliveryCrewUserManagement(CachedQuerySetMixIn,
         return Response(final_list, status=status.HTTP_200_OK)
 
 
-class CartManagement(CachedQuerySetMixIn, RetrieveUpdateDestroyAPIView):
+class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
     """
     User Cart Management API View.
 
@@ -456,7 +456,7 @@ class CartManagement(CachedQuerySetMixIn, RetrieveUpdateDestroyAPIView):
         )
 
 
-class OrderManagement(CachedQuerySetMixIn, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+class OrderManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     """
         Order Management API View.
 

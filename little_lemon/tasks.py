@@ -15,6 +15,10 @@ def update_schema_from_models(ctx):
 def update_db(ctx):
     ctx.run("doppler run -- python manage.py migrate")
 
+@task()
+def static(ctx):
+    ctx.run("doppler run -- python manage.py collectstatic --no-input", pty=True)
+
 @task(default=True)
 def dev_run(ctx, port=8000):
     ctx.run(f'doppler run -- python manage.py runserver {port} ')

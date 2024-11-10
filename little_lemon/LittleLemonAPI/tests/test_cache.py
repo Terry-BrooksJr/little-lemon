@@ -7,7 +7,7 @@ from django.contrib.auth.models import User, Group
 from rest_framework.test import APIClient
 from LittleLemonAPI.models import MenuItem, Cart, Order,Category
 from LittleLemonAPI.serializers import MenuItemSerializer
-
+from loguru import logger
 class CachingMechanismTestCase(TestCase):
     def setUp(self):
         # Clear the cache before each test
@@ -15,6 +15,7 @@ class CachingMechanismTestCase(TestCase):
         
         # Create test users
         self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.anon_user = User.objects.create_user(username='testanonuser', password='testpass') 
         self.manager = User.objects.create_user(username='manager', password='managerpass')
         manager_group, created = Group.objects.get_or_create(name='manager')
         self.manager.groups.add(manager_group)
@@ -34,16 +35,25 @@ class CachingMechanismTestCase(TestCase):
         self.menu_items_url = reverse('items-list')
 
     def seed_database(self):
-        new_item1 = MenuItem.objects.create(title='Coffee', price=5.00, category=self.test_category, featured=False)
+        new_item1 = MenuItem.objects.create(title='Salad', price=5.00, category=self.test_category, featured=False)
         new_item2 = MenuItem.objects.create(title='Ribs', price=12.00, category=self.test_category, featured=False)
         new_item3 = MenuItem.objects.create(title='Chicken', price=11.00, category=self.test_category, featured=False)
-        return (new_item1,new_item2,new_item3)
+        new_item4 = MenuItem.objects.create(title='Coffee', price=5.00, category=self.test_category, featured=False)
+        new_item5 = MenuItem.objects.create(title='Coffee', price=5.00, category=self.test_category, featured=False)
+        return (new_item1, new_item2, new_item3, new_item4, new_item5)
 
     def get_cache_key(self, user, query_params=''):
         user_id = user.id if user.is_authenticated else 'anon'
         query_params_hash = hashlib.md5(query_params.encode('utf-8')).hexdigest()
-        model_names = 'MenuItem'  # Since cache_models = [MenuItem] in the view
-        return f"MenuItemsListView_{model_names}_{user_id}_{query_params_hash}_cache_key"
+
+        # Assuming 'primary_model' and 'cache_models' are defined in your view or test
+        primary_model = MenuItem  # Adjust as needed
+        cache_models = []  # Adjust if you have additional models
+        model_names = [primary_model.__name__] + [model.__name__ for model in cache_models]
+        model_names_str = '_'.join(model_names)
+
+        view_class_name = 'MenuItemsListView' 
+        return f"{primary_model.__name__}:{view_class_name}_{model_names_str}_{user_id}_{query_params_hash}_cache_key"
 
     def test_data_is_cached(self):
         # Make a GET request to the menu items list view
@@ -73,27 +83,25 @@ class CachingMechanismTestCase(TestCase):
         self.assertEqual(len(response.data), 2)
         self.assertEqual(response.data[0]['title'], 'Pizza')
         self.assertEqual(response.data[1]['title'], 'Burger')
-
     def test_cache_invalidation_on_create(self):
-        # Cache the data
+        # Cache the initial data (should have 2 items)
         self.client.get(self.menu_items_url)
 
-        # Add a new menu item
-        self.menu_item3, self.menu_item4, self.menu_item5 = self.seed_database()
-        # Generate the cache key
-        cache_key = self.get_cache_key(self.user)
+        # Add new menu items
+       
+        menu_item1, menu_item2, menu_item3,menu_item4,menu_item5  = self.seed_database()
 
-        # Ensure the cache has been invalidated
-        cached_data = cache.get(cache_key)
-        self.assertIsNone(cached_data)
+        response = self._extracted_from_test_cache_invalidation_on_delete_9()
+        # The new items should be in the response
+        logger.debug(MenuItemSerializer(response).data)
+        self.assertEqual(len(response.data), 5)
 
-        # Make a new request
-        response = self.client.get(self.menu_items_url)
-
-        # The new item should be in the response
-        self.assertEqual(len(response.data), 3)
-        self.assertEqual(response.data[2]['title'], 'Salad')
-
+        # Check that the new items are present
+        titles = [item['title'] for item in response.data]
+        self.assertIn('Coffee', titles)
+        self.assertIn('Ribs', titles)
+        self.assertIn('Chicken', titles)
+    
     def test_cache_invalidation_on_update(self):
         # Cache the data
         self.client.get(self.menu_items_url)
@@ -102,16 +110,7 @@ class CachingMechanismTestCase(TestCase):
         self.menu_item1.title = 'Updated Pizza'
         self.menu_item1.save()
 
-        # Generate the cache key
-        cache_key = self.get_cache_key(self.user)
-
-        # Ensure the cache has been invalidated
-        cached_data = cache.get(cache_key)
-        self.assertIsNone(cached_data)
-
-        # Make a new request
-        response = self.client.get(self.menu_items_url)
-
+        response = self._extracted_from_test_cache_invalidation_on_delete_9()
         # The updated item should be in the response
         self.assertEqual(response.data[0]['title'], 'Updated Pizza')
 
@@ -122,19 +121,18 @@ class CachingMechanismTestCase(TestCase):
         # Delete a menu item
         self.menu_item1.delete()
 
-        # Generate the cache key
-        cache_key = self.get_cache_key(self.user)
-
-        # Ensure the cache has been invalidated
-        cached_data = cache.get(cache_key)
-        self.assertIsNone(cached_data)
-
-        # Make a new request
-        response = self.client.get(self.menu_items_url)
-
+        response = self._extracted_from_test_cache_invalidation_on_delete_9()
         # The deleted item should not be in the response
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['title'], 'Burger')
+
+    # TODO Rename this here and in `test_cache_invalidation_on_create`, `test_cache_invalidation_on_update` and `test_cache_invalidation_on_delete`
+    def _extracted_from_test_cache_invalidation_on_delete_9(self):
+        cache_key = self.get_cache_key(self.user)
+        cached_data = cache.get(cache_key)
+        self.assertIsNone(cached_data)
+        result = self.client.get(self.menu_items_url)
+        return result
 
     def test_fresh_data_after_invalidation(self):
         # Cache the data
@@ -157,7 +155,7 @@ class CachingMechanismTestCase(TestCase):
         self.assertEqual(response_anon.status_code, 200)
 
         # Generate cache key for anonymous user
-        cache_key_anon = self.get_cache_key(User(is_authenticated=False))
+        cache_key_anon = self.get_cache_key(user=self.anon_user)
 
         # Check that anonymous user's data is cached separately
         cached_data_anon = cache.get(cache_key_anon)
@@ -214,7 +212,7 @@ class CachingMechanismTestCase(TestCase):
 
     def test_cache_invalidation_across_multiple_views(self):
         # Assuming there's another view that also caches MenuItem data
-        other_view_url = reverse('other-items-list')
+        other_view_url = reverse('Cart-Management')
 
         # Cache data from both views
         self.client.get(self.menu_items_url)
