@@ -10,11 +10,10 @@ from django.core.cache import cache
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
-
+from redis.exceptions import LockNotOwnedError
 cached_queryset_hit = Counter("cached_queryset_hit", "Number of requests served by a cached Queryset", ["model"])
 cached_queryset_miss = Counter("cached_queryset_miss", "Number of  requests not served by a cached Queryset", ["model"])
 cached_queryset_evicted = Counter("cached_queryset_evicted", "Number of cached Querysets evicted",['model'])
-
 
 class CachedResponseMixin:
     """Mixin class to provide caching functionality for API responses.
@@ -70,10 +69,11 @@ class CachedResponseMixin:
         """
         cached_data = cache.get(cache_key)
         if cached_data is not None:
-            logger.debug(f"Cache Hit for {self.primary_model.__name__}")
+            logger.debug(f"Cache Hit for {self.primary_model.__name__} - Cache Key: {cache_key}")
             cached_queryset_hit.labels(model=self.primary_model.__name__).inc()
             return Response(cached_data, status=status.HTTP_200_OK)
         else:
+            logger.debug(f"Cache Miss for {self.primary_model.__name__}  - Cache Key: {cache_key}" )
             cached_queryset_miss.labels(model=self.primary_model.__name__).inc()
             return None
 
@@ -85,8 +85,10 @@ class CachedResponseMixin:
         Args:
             cache_key (str): The cache key under which to store the data.
             data: The data to be cached.
-        """        
+        """
+        logger.debug(f'New Cache Set {cache_key}: {data}')
         cache.set(cache_key, data, timeout=settings.VIEW_CACHE_TTL)
+
     def list(self, request, *args, **kwargs) -> Response:
         """Handle GET requests for listing resources with caching.
 
@@ -150,10 +152,14 @@ class CachedResponseMixin:
 @receiver([post_save, post_delete])
 def invalidate_cache(sender, **kwargs):
     model_name = sender.__name__
+    logger.debug(f'Signal Received For {model_name}')
     # Pattern to match cache keys that include the model name as namespace
     cache_key_pattern = f"{model_name}:*"
+    logger.debug(f'Searching For Cache Key Pattern" {cache_key_pattern}')
     if cache_keys := cache.keys(cache_key_pattern):
         cache.delete_many(cache_keys)
         logger.info(f"Cache invalidated for model: {model_name}")
+    else:
+        logger.debug(f"No cache keys found for model: {model_name} using {cache_key_pattern}")
 
 

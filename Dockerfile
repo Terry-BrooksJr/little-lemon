@@ -21,29 +21,36 @@ RUN curl -sLf --retry 3 --tlsv1.2 --proto "=https" 'https://packages.doppler.com
     echo "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main" | \
     tee /etc/apt/sources.list.d/doppler-cli.list && \
     apt-get update && \
-    apt-get -y install doppler=3.69.0 && \
+    apt-get -y install doppler && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Exopse Appliocation Port 
+# Expose Application Port 
 EXPOSE 8080
 
-# Set environment variables2
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 ENV DOPPLER_TOKEN=${DOPPLER_TOKEN}
+ENV POSTGRES_CERT_FILE=/src/.postgresql/do-cert.crt
+# Set up directories and permissions
+RUN mkdir -p /src/api /src/.postgresql && \
+    groupadd --system api_group && \
+    useradd --home-dir /src/api --no-create-home -g api_group api
 
-RUN mkdir -p /src/api
-RUN mkdir -p /src/.postgresql
-WORKDIR /src
-# Create necessary groups and users
-RUN groupadd --system api && \
-    useradd -g celery api && \
-    groupadd --system api && \
-    useradd --home-dir /src/api --no-create-home -g nhhc nhhc_app
+WORKDIR /src/api/
 
+# Install dependencies
 RUN pip install --upgrade pip
-COPY --chown=api:api requirements.txt /src/
+COPY --chown=api:api_group requirements.txt /src/
+COPY --chown=api:api_group little_lemon/ /src/api
+RUN wget https://cloud.digitalocean.com/fc4d1f0f-d3d2-42a4-8b81-2bc09967e1ad -O /src/.postgresql/do-cert.crt
+# Set up Doppler directory permissions
+RUN mkdir -p /src/api/.doppler && \
+    chown api:api_group /src/api/.doppler && \
+    chmod 775 /src/api/.doppler
 
-COPY --chown=api:api little-lemon/ /src/api
-COPY --chown=api:api .postgresql/do-cert.crt /src/.postgresql
+RUN pip install  --no-cache-dir  -r /src/requirements.txt
+
+USER api
+CMD ["inv", "start", "-p 8080", "-w 2", "-t 2"]  

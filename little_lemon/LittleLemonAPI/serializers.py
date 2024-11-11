@@ -32,7 +32,6 @@ class GroupSerializer(ModelSerializer):
 
 
 class MenuItemDetailSerializer(PriceRounder, ModelSerializer):
-    item_id = ReadOnlyField()
     category = PrimaryKeyRelatedField(queryset=Category.objects.all())
 
     class Meta:
@@ -73,7 +72,6 @@ class MenuItemDetailSerializer(PriceRounder, ModelSerializer):
 
 
 class MenuItemSerializer(PriceRounder, ModelSerializer):
-    item_id = ReadOnlyField()
     category = PrimaryKeyRelatedField(queryset=Category.objects.all())
 
     class Meta:
@@ -87,19 +85,30 @@ class MenuItemSerializer(PriceRounder, ModelSerializer):
         representation["category"] = instance.category.title
         logger.debug(f"Modified menu item representation to {representation}")
         return {
-            "product_sku": int(representation["item_id"]),
-            "category": representation["category"],
-            "product_name": representation["title"],
-            "price_per_item": float(representation["price"]),
+            "product_sku": int(instance.item_id),
+            "category": instance.category.title,
+            "product_name": instance.title,
+            "price_per_item": float(instance.price),
         }
 
     def to_internal_value(self, data):
-        ret = super().to_internal_value(data)
-        logger.debug(ret)
-        ret["product_sku"] = data["item_id"]
-        ret["product_name"] = data["title"]
-        ret["price_per_item"] = data["price"]
-        return ret
+        mappings = {
+            'product_sku': 'item_id',
+            'product_name': 'title',
+            'price_per_item': 'price'
+        }
+
+        # Map product_sku, product_name, and price_per_item to their new keys
+        for key, new_key in mappings.items():
+            value = data.pop(key, None)
+            if value is not None:
+                data[new_key] = value
+
+        # Handle calories field specifically
+        calories = data.pop('calories', None)
+        data['calories'] = calories if calories is not None else -1
+
+        return super().to_internal_value(data)
 
 
 class UserSerializer(ModelSerializer):

@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticate
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth.models import Group, User
 from django.db import IntegrityError
-from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem
+from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem,Category
 from LittleLemonAPI.serializers import (
     MenuItemSerializer,
     UserSerializer,
@@ -44,7 +44,7 @@ def api_root(request):
                     "description": "Manage cart items, add, update, and delete items.",
                 },
             ]
-        }````````
+        }
     )
 
 
@@ -115,22 +115,40 @@ class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
     search_fields = ["title"]
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  POST Request Blocked At {reverse('items-detail')}")
+            logger.warning(f"Unauthorized  {request.method} Request Blocked At {reverse('items-list')}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         try:
             return super().create(request, *args, **kwargs)
-        except (IntegrityError, TypeError, KeyError) as e:
-            print(dir(e))
-            logger.error(str(e))
+        except IntegrityError as e:
+            logger.error(F"Error Persisting To Database: {str(e)}")
+            return Response(
+                {"error": "Unable to add menu item", "reason": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except TypeError as e:
+            logger.error(f"Error Parsing Due to Data Type: {str(e)}")
+            return Response(
+                {"error": "Unable to add menu item", "reason": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except KeyError as e:
+            logger.error(f"Error Parsing Due to Object Key Access Exceptions: {str(e)}")
             return Response(
                 {"error": "Unable to add menu item", "reason": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category = self.request.query_params.get('category', None)
+        if category is not None:
+            cat_query = Category.objects.filter(title__iexact=category).first()
+            if cat_query is not None:
+                queryset = queryset.filter(category = cat_query)
+        return queryset
 class MenuItemDetailView(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
     """
     Menu Item Detail, Update, and Delete API View.
@@ -155,31 +173,25 @@ class MenuItemDetailView(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = "item_id"
 
-    def perform_update_or_destroy(self, request, method):
-        if request.user.groups.filter(name="manager").exists():
-            return method(request)
-        logger.warning(f"Unauthorized {method.__name__} Request Blocked At {reverse('items-detail')}")
-        return Response(
-            {"error": "Action restricted to managers only."},
-            status=status.HTTP_403_FORBIDDEN,
-        )
-
     def update(self, request, *args, **kwargs):
-        return self.perform_update_or_destroy(
-            request, lambda req: super().update(req, *args, **kwargs)
-        )
+        if request.user.groups.filter(name="manager").exists():
+            return super().update(request, *args, **kwargs)
+        logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=status.HTTP_403_FORBIDDEN)
+    
+
 
     def destroy(self, request, *args, **kwargs):
-        return self.perform_update_or_destroy(
-            request, lambda req: super().destroy(req, *args, **kwargs)
-        )
+        if request.user.groups.filter(name="manager").exists():
+            return super().destroy(request, *args, **kwargs)
+        logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=status.HTTP_403_FORBIDDEN)
 
     def partial_update(self, request, *args, **kwargs):
-        return self.perform_update_or_destroy(
-            request, lambda req: super().partial_update(req, *args, **kwargs)
-        )
-
-
+        if request.user.groups.filter(name="manager").exists():
+            return super().partial_update(request, *args, **kwargs)
+        logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+        return Response(data={"error":"Action Restricted to Managers Only"}, status=status.HTTP_403_FORBIDDEN)
 class ManagerUserManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
     """
     Manager User Management API View.

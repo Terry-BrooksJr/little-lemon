@@ -29,6 +29,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
+PROMETHEUS_METRIC_NAMESPACE = "little_lemon_api"
 
 ALLOWED_HOSTS = ["*"]
 LANGUAGE_CODE = "en-us"
@@ -288,7 +289,7 @@ JAZZMIN_SETTINGS = {
     # override change forms on a per modeladmin basis
     "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
     # Add a language dropdown into the admin
-    "language_chooser": True,
+    "language_chooser": False,
 }
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -314,8 +315,12 @@ CACHES = {
     "default": {
         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
         "LOCATION": f"redis://{os.getenv('CACHE_USER')}:{os.getenv('CACHE_PASSWORD')}@{os.getenv('CACHE_HOST')}:{os.getenv('CACHE_PORT')}/{os.getenv('CACHE_DB')}",
+        # "KEY_FUNCTION": "little_lemon.utils.cache.KeyFunction",
       "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PICKLE_VERSION": -1,
+            "IGNORE_EXCEPTIONS": True,
+            "PARSER_CLASS": "redis.connection._HiredisParser",
             "CONNECTION_POOL_CLASS": "redis.BlockingConnectionPool",  # Optional, but recommended
             "CONNECTION_POOL_CLASS_KWARGS": {
                 "max_connections": 20,  # Customize as needed
@@ -328,6 +333,7 @@ CACHES = {
             )
          }   }
 }
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
 VIEW_CACHE_TTL = int(os.environ['CACHE_TTL'])
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
@@ -363,8 +369,8 @@ BUNNY_PASSWORD = os.environ["BUNNY_PASSWORD"]
 BUNNY_REGION = os.environ["BUNNY_REGION"]
 BUNNY_HOSTNAME = os.environ["BUNNY_HOSTNAME"]
 BUNNY_BASE_DIR = os.environ["BUNNY_BASE_DIR"]
-STATIC_LOCATION = "staticfiles/"
-STATIC_URL = f"https://cdn.brooksjr.com/{STATIC_LOCATION}/"
+STATIC_LOCATION = ".staticfiles/"
+STATIC_URL = f"https://cdn.little-lemon.xyz/{STATIC_LOCATION}/"
 STATIC_ROOT = STATIC_URL
 WHITENOISE_MANIFEST_STRICT = False
 
@@ -407,8 +413,8 @@ logtail = LogtailHandler(source_token=os.getenv("LOGTAIL_SOURCE_TOKEN"))
 logger.remove(0)
 warnings.showwarning = logger.warning
 logger.add(DEBUG_LOG_FILE, level="DEBUG", colorize=True, diagnose=True)
-# logger.add(sys.stderr, level="DEBUG", colorize=True, diagnose=True)
-# logger.add(sys.stdout, level="DEBUG", colorize=True, diagnose=True)
+logger.add(sys.stderr, level="DEBUG", colorize=True, diagnose=True)
+logger.add(sys.stdout, level="DEBUG", colorize=True, diagnose=True)
 logger.add(logtail, level="INFO", colorize=True)
 logging.basicConfig(level=logging.WARNING)
 logger.add("file.log", level="DEBUG")

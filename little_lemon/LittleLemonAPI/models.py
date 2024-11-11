@@ -38,10 +38,10 @@ class MenuItem(ExportModelOperationsMixin("menu_items"), models.Model):
     saturated_fat_gm = models.DecimalField(
         max_digits=6, decimal_places=2, null=True, blank=True
     )
-    contains_dairy = models.BooleanField(null=True, blank=True)
-    contains_treenuts = models.BooleanField(null=True, blank=True)
-    contains_gluten = models.BooleanField(null=True, blank=True)
-    is_on_sale = models.BooleanField(null=True, blank=True)
+    contains_dairy = models.BooleanField(db_index=True, default=False)
+    contains_treenuts = models.BooleanField(db_index=True, default=False)
+    contains_gluten = models.BooleanField(db_index=True, default=False)
+    is_on_sale = models.BooleanField(db_index=True, default=False)
 
     def __str__(self):
         return f"{self.title} ({self.category.title})"

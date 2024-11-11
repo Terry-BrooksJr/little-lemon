@@ -5,7 +5,7 @@ import os
 
 @task()
 def start(ctx, port, workers, threads, log_level="INFO"):
-    ctx.run(f'doppler run -- gunicorn --workers {workers} --threads {threads} --log-level {log_level}  --env DJANGO_SETTINGS_MODULE=little_lemon.settings little_lemon.wsgi  -b :{port} ')
+    ctx.run(f'doppler run -- gunicorn --workers {workers} --threads {threads} --log-level {log_level}  --env DJANGO_SETTINGS_MODULE=little_lemon.settings little_lemon.wsgi  -b put:{port} ')
 
 @task()
 def update_schema_from_models(ctx):
@@ -27,7 +27,9 @@ def dev_run(ctx, port=8000):
 def test(ctx):
     ctx.run("doppler run -- python manage.py test --keepdb")
 
-
+@task 
+def django(ctx, namespace_command):
+    ctx.run(f"doppler run -- python manage.py  {namespace_command}")
 @task
 def sync(ctx, dry_run=False):
     if not dry_run:
