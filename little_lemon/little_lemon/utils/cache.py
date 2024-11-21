@@ -14,7 +14,7 @@ from redis.exceptions import LockNotOwnedError
 cached_queryset_hit = Counter("cached_queryset_hit", "Number of requests served by a cached Queryset", ["model"])
 cached_queryset_miss = Counter("cached_queryset_miss", "Number of  requests not served by a cached Queryset", ["model"])
 cached_queryset_evicted = Counter("cached_queryset_evicted", "Number of cached Querysets evicted",['model'])
-
+cached_queryset_errror = Counter("cached_queryset_error", "Number of errors occuring while setting a cahe, ['model'])
 class CachedResponseMixin:
     """Mixin class to provide caching functionality for API responses.
 
@@ -86,9 +86,13 @@ class CachedResponseMixin:
             cache_key (str): The cache key under which to store the data.
             data: The data to be cached.
         """
-        logger.debug(f'New Cache Set {cache_key}: {data}')
-        cache.set(cache_key, data, timeout=settings.VIEW_CACHE_TTL)
-
+        try:
+            logger.debug(f'New Cache Set {cache_key}: {data}')
+            cache.set(cache_key, data, timeout=settings.VIEW_CACHE_TTL)
+        except (ConnectionError, RedisError) as e:
+            cached_queryset_error.labels(model=self.primary_model.__name__).inc()
+            logger.error(f"Cache write failed for {cache_key}: {str(e)}")
+            
     def list(self, request, *args, **kwargs) -> Response:
         """Handle GET requests for listing resources with caching.
 
