@@ -141,6 +141,7 @@ class CachedResponseMixin:
         if cached_response := self.get_cached_response(cache_key):
             return cached_response
 
+
         # If cache miss, proceed as usual
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -161,4 +162,5 @@ def invalidate_cache(sender, **kwargs):
         logger.info(f"Cache invalidated for model: {model_name}")
     else:
         logger.debug(f"No cache keys found for model: {model_name} using {cache_key_pattern}")
+
 
