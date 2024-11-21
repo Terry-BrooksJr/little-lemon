@@ -30,7 +30,6 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 PROMETHEUS_METRIC_NAMESPACE = "little_lemon_api"
-
 ALLOWED_HOSTS = ["*"]
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "America/New_York"
@@ -323,12 +322,12 @@ CACHES = {
             "PARSER_CLASS": "redis.connection._HiredisParser",
             "CONNECTION_POOL_CLASS": "redis.BlockingConnectionPool",  # Optional, but recommended
             "CONNECTION_POOL_CLASS_KWARGS": {
-                "max_connections": 20,  # Customize as needed
+                "max_connections": 15,  # Customize as needed
                 "timeout": 200,  # Customize as needed
             },
             "RETRY_ON_TIMEOUT": True,  # Enable retries on timeouts
             "RETRY": Retry(  # Configure retry strategy
-                backoff=ExponentialBackoff(base=0.1, cap=10),
+                backoff=ExponentialBackoff(base=0.1, cap=15),
                 retries=5
             )
          }   }
@@ -337,6 +336,7 @@ DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
 VIEW_CACHE_TTL = int(os.environ['CACHE_TTL'])
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
+VIEW_CACHE_TTL = int(os.environ["CACHE_TTL"])
 
 
 # Password validation
