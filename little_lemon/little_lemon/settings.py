@@ -1,19 +1,24 @@
+import logging
 import os
+import pathlib
+import sys
+import warnings
 from pathlib import Path
+
 from logtail import LogtailHandler
 from loguru import logger
-import sys
-import pathlib
-import warnings
-from redis.retry import Retry
 from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
 
-import logging
-from loguru import logger
+
 def log_warning(message, category, filename, lineno, file=None, line=None):
     logger.warning(f" {message}")
 
-warnings.filterwarnings(action='ignore', message=r"w+", )
+
+warnings.filterwarnings(
+    action="ignore",
+    message=r"w+",
+)
 
 warnings.showwarning = log_warning
 
@@ -81,7 +86,9 @@ ROOT_URLCONF = "little_lemon.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ['/Users/terry-brooks/GitHub/coursera-meta-api-final/.venv/lib/python3.12/site-packages/drf_redesign/templates'],
+        "DIRS": [
+            "/Users/terry-brooks/GitHub/coursera-meta-api-final/.venv/lib/python3.12/site-packages/drf_redesign/templates"
+        ],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -110,45 +117,51 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",  # TODO - DELETE BEFORE SUBMISSION
-        "rest_framework.authentication.BasicAuthentication",  # TODO - DELETE BEFORE SUBMISSION
+        # "rest_framework.authentication.SessionAuthentication",  # TODO - DELETE BEFORE SUBMISSION
+        # "rest_framework.authentication.BasicAuthentication",  # TODO - DELETE BEFORE SUBMISSION
         "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_THROTTLE_RATES": {"anon": "4/minute", "user": "12/minute"},
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 25,
-    
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'The Little Lemon API',
-    'DESCRIPTION': 'The Little Lemon API project is Terry Brooks\' final project for Meta\'s APIs course on Coursera. For more information about the course, visit the Coursera course page. The source code for this project is available on GitHub for learning purposes.',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': True,
-        "SWAGGER_UI_SETTINGS": {
+    "TITLE": "The Little Lemon API",
+    "DESCRIPTION": "The Little Lemon API project is Terry Brooks' final project for Meta's APIs course on Coursera. For more information about the course, visit the Coursera course page. The source code for this project is available on GitHub for learning purposes.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": True,
+    "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
         "persistAuthorization": True,
-        "displayOperationId": True
-        },
-    'SWAGGER_UI_DIST': 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest',
-    'SWAGGER_UI_FAVICON_HREF': "https://cdn.littlelemon.xyz/images/logo-little-lemon.pngg",
-    'CONTACT': {
+        "displayOperationId": True,
+    },
+    "SWAGGER_UI_DIST": "https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest",
+    "SWAGGER_UI_FAVICON_HREF": "https://cdn.littlelemon.xyz/images/logo-little-lemon.pngg",
+    "CONTACT": {
         "name": "Terry A. Brooks, Jr.",
         "url": "https://brooksjr.com",
-        "email": "terry@brooksjr.com"
+        "email": "terry@brooksjr.com",
     },
     "EXTERNAL_DOCS": {
         "url": "https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/collection/20135114-623c0e98-b088-4bff-8ee7-f8d030294a09?action=share&source=copy-link&creator=20135114",
-        "description": "Postman Documentation and full API documentation Hub"
-    }
-
-    # OTHERTINGS
+        "description": "Postman Documentation and full API documentation Hub",
+        "SECURITY_DEFINITIONS": {
+            "TokenAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Token-based authentication. Use 'Token <your_token>' format.",
+            },
+        },
+    },
 }
+
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
@@ -161,8 +174,8 @@ DATABASES = {
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
         "HOST": os.getenv("PG_DATABASE_HOST"),
         "PORT": os.getenv("PG_DATABASE_PORT"),
-        'CONN_MAX_AGE': 300,  # Keep connections alive for 5 minutes
-        'CONN_HEALTH_CHECKS': True,  # Check
+        "CONN_MAX_AGE": 300,  # Keep connections alive for 5 minutes
+        "CONN_HEALTH_CHECKS": True,  # Check
         "OPTIONS": {
             "sslmode": "verify-full",
             "sslrootcert": os.environ["POSTGRES_CERT_FILE"],
@@ -174,7 +187,7 @@ CACHES = {
     "default": {
         "BACKEND": "django_prometheus.cache.backends.redis.RedisCache",
         "LOCATION": f"redis://{os.getenv('CACHE_USER')}:{os.getenv('CACHE_PASSWORD')}@{os.getenv('CACHE_HOST')}:{os.getenv('CACHE_PORT')}/{os.getenv('CACHE_DB')}",
-      "OPTIONS": {
+        "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "CONNECTION_POOL_CLASS": "redis.BlockingConnectionPool",  # Optional, but recommended
             "CONNECTION_POOL_CLASS_KWARGS": {
@@ -183,10 +196,10 @@ CACHES = {
             },
             "RETRY_ON_TIMEOUT": True,  # Enable retries on timeouts
             "RETRY": Retry(  # Configure retry strategy
-                backoff=ExponentialBackoff(base=0.1, cap=15),
-                retries=5
-            )
-         }   }
+                backoff=ExponentialBackoff(base=0.1, cap=15), retries=5
+            ),
+        },
+    }
 }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -235,7 +248,8 @@ STORAGES = {
     },
 }
 STATICFILES_DIRS = [
-  "/Users/terry-brooks/GitHub/coursera-meta-api-final/.venv/lib/python3.12/site-packages/drf_redesign/templates"]
+    "/Users/terry-brooks/GitHub/coursera-meta-api-final/.venv/lib/python3.12/site-packages/drf_redesign/templates"
+]
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 

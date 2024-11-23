@@ -21,17 +21,16 @@ from django.contrib import admin
 from django.urls import include, path, re_path
 
 import LittleLemonAPI.urls
-from LittleLemonAPI.views import api_root
+from LittleLemonAPI.views import APIRootView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("django_prometheus.urls")),
     re_path(r"^api/", include(LittleLemonAPI.urls)),
     re_path(r"", include("djoser.urls.authtoken")),
-    re_path(r"^$", api_root, name="API-Root"),
+    re_path(r"^$", APIRootView.as_view(), name="API-Root"),
     re_path(r"^api-auth/", include("rest_framework.urls", namespace="rest_framework")),
 ]
-
 
 if settings.DEBUG:
     urlpatterns += debug_toolbar_urls()

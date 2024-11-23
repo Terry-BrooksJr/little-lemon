@@ -1,49 +1,68 @@
 # tests.py
 import hashlib
+
+from django.contrib.auth.models import Group, User
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
-from django.core.cache import cache
-from django.contrib.auth.models import User, Group
 from rest_framework.test import APIClient
-from LittleLemonAPI.models import MenuItem, Cart, Order,Category
+
+from LittleLemonAPI.models import Cart, Category, MenuItem, Order
 from LittleLemonAPI.serializers import MenuItemSerializer
+
 
 class CachingMechanismTestCase(TestCase):
     def setUp(self):
         # Clear the cache before each test
         cache.clear()
-        
+
         # Create test users
-        self.user = User.objects.create_user(username='testuser', password='testpass')
-        self.manager = User.objects.create_user(username='manager', password='managerpass')
-        manager_group, created = Group.objects.get_or_create(name='manager')
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.manager = User.objects.create_user(
+            username="manager", password="managerpass"
+        )
+        manager_group, created = Group.objects.get_or_create(name="manager")
         self.manager.groups.add(manager_group)
-        self.test_category = Category.objects.create(title="TEST",slug="test", category_id=1)
+        self.test_category = Category.objects.create(
+            title="TEST", slug="test", category_id=1
+        )
         # Create test menu items
-        self.menu_item1 = MenuItem.objects.create(title='Pizza', price=10.00, category=self.test_category, featured=False)
-        self.menu_item2 = MenuItem.objects.create(title='Burger', price=8.00, category=self.test_category, featured=False)
+        self.menu_item1 = MenuItem.objects.create(
+            title="Pizza", price=10.00, category=self.test_category, featured=False
+        )
+        self.menu_item2 = MenuItem.objects.create(
+            title="Burger", price=8.00, category=self.test_category, featured=False
+        )
 
         # Set up API clients
         self.client = APIClient()
-        self.client.login(username='testuser', password='testpass')
+        self.client.login(username="testuser", password="testpass")
 
         self.manager_client = APIClient()
-        self.manager_client.login(username='manager', password='managerpass')
+        self.manager_client.login(username="manager", password="managerpass")
 
         # Endpoint URL
-        self.menu_items_url = reverse('items-list')
+        self.menu_items_url = reverse("items-list")
 
     def seed_database(self):
-        new_item1 = MenuItem.objects.create(title='Coffee', price=5.00, category=self.test_category, featured=False)
-        new_item2 = MenuItem.objects.create(title='Ribs', price=12.00, category=self.test_category, featured=False)
-        new_item3 = MenuItem.objects.create(title='Chicken', price=11.00, category=self.test_category, featured=False)
-        return (new_item1,new_item2,new_item3)
+        new_item1 = MenuItem.objects.create(
+            title="Coffee", price=5.00, category=self.test_category, featured=False
+        )
+        new_item2 = MenuItem.objects.create(
+            title="Ribs", price=12.00, category=self.test_category, featured=False
+        )
+        new_item3 = MenuItem.objects.create(
+            title="Chicken", price=11.00, category=self.test_category, featured=False
+        )
+        return (new_item1, new_item2, new_item3)
 
-    def get_cache_key(self, user, query_params=''):
-        user_id = user.id if user.is_authenticated else 'anon'
-        query_params_hash = hashlib.md5(query_params.encode('utf-8')).hexdigest()
-        model_names = 'MenuItem'  # Since cache_models = [MenuItem] in the view
-        return f"MenuItemsListView_{model_names}_{user_id}_{query_params_hash}_cache_key"
+    def get_cache_key(self, user, query_params=""):
+        user_id = user.id if user.is_authenticated else "anon"
+        query_params_hash = hashlib.md5(query_params.encode("utf-8")).hexdigest()
+        model_names = "MenuItem"  # Since cache_models = [MenuItem] in the view
+        return (
+            f"MenuItemsListView_{model_names}_{user_id}_{query_params_hash}_cache_key"
+        )
 
     def test_data_is_cached(self):
         # Make a GET request to the menu items list view
@@ -71,8 +90,8 @@ class CachingMechanismTestCase(TestCase):
 
         # The response should still have the data from the cache
         self.assertEqual(len(response.data), 2)
-        self.assertEqual(response.data[0]['title'], 'Pizza')
-        self.assertEqual(response.data[1]['title'], 'Burger')
+        self.assertEqual(response.data[0]["title"], "Pizza")
+        self.assertEqual(response.data[1]["title"], "Burger")
 
     def test_cache_invalidation_on_create(self):
         # Cache the data
@@ -92,14 +111,14 @@ class CachingMechanismTestCase(TestCase):
 
         # The new item should be in the response
         self.assertEqual(len(response.data), 3)
-        self.assertEqual(response.data[2]['title'], 'Salad')
+        self.assertEqual(response.data[2]["title"], "Salad")
 
     def test_cache_invalidation_on_update(self):
         # Cache the data
         self.client.get(self.menu_items_url)
 
         # Update a menu item
-        self.menu_item1.title = 'Updated Pizza'
+        self.menu_item1.title = "Updated Pizza"
         self.menu_item1.save()
 
         # Generate the cache key
@@ -113,7 +132,7 @@ class CachingMechanismTestCase(TestCase):
         response = self.client.get(self.menu_items_url)
 
         # The updated item should be in the response
-        self.assertEqual(response.data[0]['title'], 'Updated Pizza')
+        self.assertEqual(response.data[0]["title"], "Updated Pizza")
 
     def test_cache_invalidation_on_delete(self):
         # Cache the data
@@ -134,21 +153,21 @@ class CachingMechanismTestCase(TestCase):
 
         # The deleted item should not be in the response
         self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['title'], 'Burger')
+        self.assertEqual(response.data[0]["title"], "Burger")
 
     def test_fresh_data_after_invalidation(self):
         # Cache the data
         self.client.get(self.menu_items_url)
 
         # Update a menu item
-        self.menu_item1.title = 'Fresh Pizza'
+        self.menu_item1.title = "Fresh Pizza"
         self.menu_item1.save()
 
         # Make a new request
         response = self.client.get(self.menu_items_url)
 
         # The response should have fresh data
-        self.assertEqual(response.data[0]['title'], 'Fresh Pizza')
+        self.assertEqual(response.data[0]["title"], "Fresh Pizza")
 
     def test_cache_key_includes_user_specific_data(self):
         # Make a request as an anonymous user
@@ -169,20 +188,20 @@ class CachingMechanismTestCase(TestCase):
 
     def test_cache_with_query_parameters(self):
         # Make a request with a filter
-        response_filtered = self.client.get(self.menu_items_url, {'search': 'Pizza'})
+        response_filtered = self.client.get(self.menu_items_url, {"search": "Pizza"})
         self.assertEqual(response_filtered.status_code, 200)
         self.assertEqual(len(response_filtered.data), 1)
-        self.assertEqual(response_filtered.data[0]['title'], 'Pizza')
+        self.assertEqual(response_filtered.data[0]["title"], "Pizza")
 
         # Generate the cache key with query parameters
-        query_params = 'search=Pizza'
+        query_params = "search=Pizza"
         cache_key = self.get_cache_key(self.user, query_params)
 
         # Check that filtered data is cached
         cached_data = cache.get(cache_key)
         self.assertIsNotNone(cached_data)
         self.assertEqual(len(cached_data), 1)
-        self.assertEqual(cached_data[0]['title'], 'Pizza')
+        self.assertEqual(cached_data[0]["title"], "Pizza")
 
         # Ensure that the cache key is different from the one without query parameters
         default_cache_key = self.get_cache_key(self.user)
@@ -194,7 +213,7 @@ class CachingMechanismTestCase(TestCase):
         self.manager_client.get(self.menu_items_url)
 
         # Update a menu item
-        self.menu_item1.title = 'Manager Updated Pizza'
+        self.menu_item1.title = "Manager Updated Pizza"
         self.menu_item1.save()
 
         # Check that both caches are invalidated
@@ -209,19 +228,19 @@ class CachingMechanismTestCase(TestCase):
         response_manager = self.manager_client.get(self.menu_items_url)
 
         # Both responses should have the updated data
-        self.assertEqual(response_user.data[0]['title'], 'Manager Updated Pizza')
-        self.assertEqual(response_manager.data[0]['title'], 'Manager Updated Pizza')
+        self.assertEqual(response_user.data[0]["title"], "Manager Updated Pizza")
+        self.assertEqual(response_manager.data[0]["title"], "Manager Updated Pizza")
 
     def test_cache_invalidation_across_multiple_views(self):
         # Assuming there's another view that also caches MenuItem data
-        other_view_url = reverse('other-items-list')
+        other_view_url = reverse("other-items-list")
 
         # Cache data from both views
         self.client.get(self.menu_items_url)
         self.client.get(other_view_url)
 
         # Update a menu item
-        self.menu_item1.title = 'Updated Across Views'
+        self.menu_item1.title = "Updated Across Views"
         self.menu_item1.save()
 
         # Generate cache keys for both views
@@ -237,11 +256,12 @@ class CachingMechanismTestCase(TestCase):
         response_other = self.client.get(other_view_url)
 
         # Both responses should have the updated data
-        self.assertEqual(response_main.data[0]['title'], 'Updated Across Views')
-        self.assertEqual(response_other.data[0]['title'], 'Updated Across Views')
+        self.assertEqual(response_main.data[0]["title"], "Updated Across Views")
+        self.assertEqual(response_other.data[0]["title"], "Updated Across Views")
 
     def test_performance_with_caching(self):
         import time
+
         # First request (should be slower)
         start_time = time.time()
         self.client.get(self.menu_items_url)

@@ -1,51 +1,62 @@
-from django.shortcuts import get_object_or_404
-from django.urls import reverse
-from django.forms.models import model_to_dict
-from rest_framework import filters, status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
-from rest_framework.decorators import api_view, renderer_classes
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from django_filters.rest_framework import DjangoFilterBackend
-from django.contrib.auth.models import Group, User
-from django.db import IntegrityError
-from LittleLemonAPI.models import MenuItem, Cart, Order, OrderItem
-from LittleLemonAPI.serializers import (
-    MenuItemSerializer,
-    UserSerializer,
-    CartSerializer,
-    OrderSerializer,
-    MenuItemDetailSerializer,
-)
-
-from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
-from loguru import logger
 import json
 from datetime import datetime
+
+from django.contrib.auth.models import Group, User
+from django.db import IntegrityError
+from django.forms.models import model_to_dict
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.utils import (OpenApiExample, OpenApiParameter,
+                                   OpenApiResponse, extend_schema,
+                                   extend_schema_view, inline_serializer)
+from loguru import logger
+from rest_framework import filters, status
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.generics import (GenericAPIView, ListCreateAPIView,
+                                     RetrieveAPIView,
+                                     RetrieveUpdateDestroyAPIView)
+from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
+from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
+from rest_framework.response import Response
+
 from little_lemon.utils.cache import CachedResponseMixin
-@api_view(["GET"])
-@renderer_classes([BrowsableAPIRenderer, JSONRenderer])
-def api_root(request):
-    """Welcome To the Little Lemon API. Get started by making a request to one of the Primary Endpoints"""
-    return Response(
-        {
-            "primary API Endpoint": [
-                {
-                    "Menu Items": reverse("items-list"),
-                    "description": "Manage menu items: create, update, delete.",
-                },
-                {
-                    "Orders": reverse("Order-Management"),
-                    "description": "Manage orders from creation to deletion.",
-                },
-                {
-                    "Cart": reverse("Cart-Management"),
-                    "description": "Manage cart items, add, update, and delete items.",
-                },
-            ]
-        }
-    )
+from LittleLemonAPI.models import Cart, MenuItem, Order, OrderItem
+from LittleLemonAPI.serializers import (CartSerializer,
+                                        MenuItemDetailSerializer,
+                                        MenuItemSerializer, OrderSerializer,
+                                        UserSerializer)
+
+
+class APIRootView(RetrieveAPIView):
+    queryset = None
+    primary_model = None
+    cache_models = [None]
+    serializer_class = inline_serializer(name="API Root", fields={})
+    filter_backends = None
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        return Response(
+            {
+                "primary API Endpoint": [
+                    {
+                        "Menu Items": reverse("items-list"),
+                        "description": "Manage menu items: create, update, delete.",
+                    },
+                    {
+                        "Orders": reverse("Order-Management"),
+                        "description": "Manage orders from creation to deletion.",
+                    },
+                    {
+                        "Cart": reverse("Cart-Management"),
+                        "description": "Manage cart items, add, update, and delete items.",
+                    },
+                ]
+            }
+        )
 
 
 class MyEncoder(json.JSONEncoder):
@@ -78,6 +89,89 @@ class MyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+@extend_schema_view(
+    list=extend_schema(
+        tags=["Inventory Management"],
+        parameters=[
+            OpenApiParameter(
+                name="featured",
+                description="Filter menu items by whether they are featured (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="category",
+                description="Filter menu items by category ID.",
+                required=False,
+                type=int,
+            ),
+            OpenApiParameter(
+                name="title",
+                description="Search menu items by title.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="is_on_sale",
+                description="Filter menu items by whether they are on sale (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="contains_dairy",
+                description="Filter menu items by whether they contain dairy (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="contains_treenuts",
+                description="Filter menu items by whether they contain tree nuts (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="contains_gluten",
+                description="Filter menu items by whether they contain gluten (true/false).",
+                required=False,
+                type=bool,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=MenuItemSerializer(many=True),
+                description="A list of menu items matching the query parameters.",
+                examples=[
+                    OpenApiExample(
+                        name="Successful Response",
+                        value=[
+                            {
+                                "id": 1,
+                                "title": "Spaghetti Bolognese",
+                                "category": "Main Course",
+                                "featured": True,
+                                "is_on_sale": False,
+                                "contains_dairy": False,
+                                "contains_treenuts": False,
+                                "contains_gluten": True,
+                            },
+                            {
+                                "id": 2,
+                                "title": "Vegan Burger",
+                                "category": "Snacks",
+                                "featured": False,
+                                "is_on_sale": True,
+                                "contains_dairy": False,
+                                "contains_treenuts": False,
+                                "contains_gluten": False,
+                            },
+                        ],
+                        description="Example response for a successful menu item list query.",
+                    )
+                ],
+            ),
+        },
+    ),
+)
 class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
     """
     Menu Items List and Creation API View.
@@ -98,9 +192,10 @@ class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
     - **403 Forbidden**: If a non-manager attempts to create a menu item.
     - **400 Bad Request**: If an item creation fails due to invalid data.
     """
+
     queryset = MenuItem.objects.all()
     primary_model = MenuItem
-    cache_models = [ Group, User ]
+    cache_models = [Group, User]
     serializer_class = MenuItemSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     permission_classes = [IsAuthenticatedOrReadOnly]
@@ -113,9 +208,124 @@ class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
         "contains_gluten",
     ]
     search_fields = ["title"]
+
+    @extend_schema(
+        tags=["Inventory Management"],
+        parameters=[
+            OpenApiParameter(
+                name="featured",
+                description="Filter menu items by whether they are featured (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="category",
+                description="Filter menu items by category ID.",
+                required=False,
+                type=int,
+            ),
+            OpenApiParameter(
+                name="title",
+                description="Search menu items by title.",
+                required=False,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="is_on_sale",
+                description="Filter menu items by whether they are on sale (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="contains_dairy",
+                description="Filter menu items by whether they contain dairy (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="contains_treenuts",
+                description="Filter menu items by whether they contain tree nuts (true/false).",
+                required=False,
+                type=bool,
+            ),
+            OpenApiParameter(
+                name="contains_gluten",
+                description="Filter menu items by whether they contain gluten (true/false).",
+                required=False,
+                type=bool,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=MenuItemSerializer(many=True),
+                description="A list of menu items matching the query parameters.",
+                examples=[
+                    OpenApiExample(
+                        name="Successful Response",
+                        value=[
+                            {
+                                "id": 1,
+                                "title": "Spaghetti Bolognese",
+                                "category": "Main Course",
+                                "featured": True,
+                                "is_on_sale": False,
+                                "contains_dairy": False,
+                                "contains_treenuts": False,
+                                "contains_gluten": True,
+                            },
+                            {
+                                "id": 2,
+                                "title": "Vegan Burger",
+                                "category": "Snacks",
+                                "featured": False,
+                                "is_on_sale": True,
+                                "contains_dairy": False,
+                                "contains_treenuts": False,
+                                "contains_gluten": False,
+                            },
+                        ],
+                        description="Example response for a successful menu item list query.",
+                    )
+                ],
+            ),
+            201: OpenApiResponse(
+                response=MenuItemSerializer,
+                description="Menu item successfully created.",
+                examples=[
+                    OpenApiExample(
+                        name="Successful Creation",
+                        value={
+                            "id": 3,
+                            "title": "Caesar Salad",
+                            "category": "Salads",
+                            "featured": True,
+                            "is_on_sale": False,
+                            "contains_dairy": True,
+                            "contains_treenuts": False,
+                            "contains_gluten": True,
+                        },
+                        description="Example response for successfully creating a menu item.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Unauthorized access - user is not a manager.",
+            ),
+            400: OpenApiResponse(
+                response={
+                    "error": "Unable to add menu item",
+                    "reason": "Detailed error reason.",
+                },
+                description="Failed to create the menu item due to invalid data.",
+            ),
+        },
+    )
     def create(self, request, *args, **kwargs):
         if not request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  POST Request Blocked At {reverse('items-detail')}")
+            logger.warning(
+                f"Unauthorized  POST Request Blocked At {reverse('items-detail')}"
+            )
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -129,7 +339,6 @@ class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
                 {"error": "Unable to add menu item", "reason": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 
 class MenuItemDetailView(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
     """
@@ -151,64 +360,195 @@ class MenuItemDetailView(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = MenuItemDetailSerializer
     queryset = MenuItem.objects.all()
     primary_model = MenuItem
-    cache_models = [ Group, User ]
+    cache_models = [Group, User]
     permission_classes = [IsAuthenticatedOrReadOnly]
     lookup_field = "item_id"
 
     def perform_update_or_destroy(self, request, method):
         if request.user.groups.filter(name="manager").exists():
             return method(request)
-        logger.warning(f"Unauthorized {method.__name__} Request Blocked At {reverse('items-detail')}")
+        logger.warning(
+            f"Unauthorized {method.__name__} Request Blocked At {reverse('items-detail')}"
+        )
         return Response(
             {"error": "Action restricted to managers only."},
             status=status.HTTP_403_FORBIDDEN,
         )
 
+    @extend_schema(
+        tags=["Inventory Management"],
+        responses={
+            200: OpenApiResponse(
+                response=MenuItemDetailSerializer,
+                description="Successfully retrieved the menu item details.",
+                examples=[
+                    OpenApiExample(
+                        name="Successful Retrieve",
+                        value={
+                            "id": 1,
+                            "title": "Spaghetti Bolognese",
+                            "category": "Main Course",
+                            "featured": True,
+                            "is_on_sale": False,
+                            "contains_dairy": False,
+                            "contains_treenuts": False,
+                            "contains_gluten": True,
+                        },
+                        description="Example response for retrieving a menu item.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Unauthorized access - user is not a manager.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "Menu item not found."},
+                description="The requested menu item does not exist.",
+            ),
+        },
+    )
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @extend_schema(
+        tags=["Inventory Management"],
+        request=MenuItemDetailSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=MenuItemDetailSerializer,
+                description="Menu item successfully updated.",
+                examples=[
+                    OpenApiExample(
+                        name="Successful Update",
+                        value={
+                            "id": 1,
+                            "title": "Updated Spaghetti Bolognese",
+                            "category": "Main Course",
+                            "featured": True,
+                            "is_on_sale": True,
+                            "contains_dairy": False,
+                            "contains_treenuts": False,
+                            "contains_gluten": True,
+                        },
+                        description="Example response for updating a menu item.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Unauthorized access - user is not a manager.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "Menu item not found."},
+                description="The requested menu item does not exist.",
+            ),
+        },
+    )
     def update(self, request, *args, **kwargs):
-        return self.perform_update_or_destroy(
-            request, lambda req: super().update(req, *args, **kwargs)
-        )
+        if not request.user.groups.filter(name="manager").exists():
+            logger.warning(f"Unauthorized POST Request Blocked At {request.path}")
+            return Response(
+                {"error": "Action restricted to managers only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().update(request, *args, **kwargs)
 
+    @extend_schema(
+        tags=["Inventory Management"],
+        responses={
+            204: OpenApiResponse(description="Menu item successfully deleted."),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Unauthorized access - user is not a manager.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "Menu item not found."},
+                description="The requested menu item does not exist.",
+            ),
+        },
+    )
     def destroy(self, request, *args, **kwargs):
-        return self.perform_update_or_destroy(
-            request, lambda req: super().destroy(req, *args, **kwargs)
-        )
+        if not request.user.groups.filter(name="manager").exists():
+            logger.warning(f"Unauthorized POST Request Blocked At {request.path}")
+            return Response(
+                {"error": "Action restricted to managers only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().destroy(request, *args, **kwargs)
 
+    @extend_schema(
+        tags=["Inventory Management"],
+        request=MenuItemDetailSerializer,
+        responses={
+            200: OpenApiResponse(
+                response=MenuItemDetailSerializer,
+                description="Menu item partially updated.",
+                examples=[
+                    OpenApiExample(
+                        name="Partial Update",
+                        value={"id": 1, "title": "Partially Updated Spaghetti"},
+                        description="Example response for partially updating a menu item.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Unauthorized access - user is not a manager.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "Menu item not found."},
+                description="The requested menu item does not exist.",
+            ),
+        },
+    )
     def partial_update(self, request, *args, **kwargs):
-        return self.perform_update_or_destroy(
-            request, lambda req: super().partial_update(req, *args, **kwargs)
-        )
+        if not request.user.groups.filter(name="manager").exists():
+            logger.warning(f"Unauthorized POST Request Blocked At {request.path}")
+            return Response(
+                {"error": "Action restricted to managers only."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return super().partial_update(request, *args, **kwargs)
 
 
-class ManagerUserManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
-    """
-    Manager User Management API View.
-
-    This view manages user roles, specifically adding or removing users from the "manager" group.
-    - **Add User to Manager Group**: Only current managers can add other users to the "manager" group, granting them special privileges.
-    - **Remove User from Manager Group**: Managers can also remove users from the "manager" group.
-    - **List of Managers**: Provides a list of all users who belong to the "manager" group.
-
-    ### Permissions
-    - Only users in the "manager" group can access these operations.
-
-    Raises:
-    - **403 Forbidden**: If a non-manager attempts to access this view.
-    - **404 Not Found**: If the specified user does not exist.
-    - **400 Bad Request**: If required data, such as `username`, is missing.
-    """
+class ManagerUserManagement(
+    CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView
+):
 
     queryset = User.objects.all()
-    primary_model = User
-    cache_models = [ Group ]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["username", "first_name", "last_name"]
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["User Management"],
+        request={"type": "object", "properties": {"username": {"type": "string"}}},
+        responses={
+            201: OpenApiResponse(
+                response={"response": "Username added to manager group."},
+                examples=[
+                    OpenApiExample(
+                        name="Add User to Manager Group",
+                        value={"response": "john_doe added to manager group."},
+                        description="A user was successfully added to the manager group.",
+                    )
+                ],
+            ),
+            400: OpenApiResponse(
+                response={"error": 'POST body must include "username".'},
+                description="Request missing required username field.",
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Non-managers cannot perform this action.",
+            ),
+        },
+    )
     def post(self, request):
         if not request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+            logger.warning(f"Unauthorized POST Request Blocked At {request.path}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -221,16 +561,38 @@ class ManagerUserManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelM
                 {"response": f"{user.username} added to manager group."},
                 status=status.HTTP_201_CREATED,
             )
-        except KeyError as e:
-            logger.error(str(e))
+        except KeyError:
             return Response(
                 {"error": 'POST body must include "username".'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @extend_schema(
+        tags=["User Management"],
+        responses={
+            200: OpenApiResponse(
+                response={"response": "Username removed from manager group."},
+                examples=[
+                    OpenApiExample(
+                        name="Remove User from Manager Group",
+                        value={"response": "john_doe removed from manager group."},
+                        description="A user was successfully removed from the manager group.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Non-managers cannot perform this action.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "User not found."},
+                description="The specified user does not exist.",
+            ),
+        },
+    )
     def delete(self, request, id):
         if not request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+            logger.warning(f"Unauthorized DELETE Request Blocked At {request.path}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -242,49 +604,87 @@ class ManagerUserManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelM
             status=status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        tags=["User Management"],
+        responses={
+            200: OpenApiResponse(
+                response=UserSerializer(many=True),
+                examples=[
+                    OpenApiExample(
+                        name="List Managers",
+                        value=[
+                            {
+                                "id": 1,
+                                "username": "manager1",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                            },
+                            {
+                                "id": 2,
+                                "username": "manager2",
+                                "first_name": "Jane",
+                                "last_name": "Smith",
+                            },
+                        ],
+                        description="List of all users in the manager group.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Non-managers cannot perform this action.",
+            ),
+        },
+    )
     def get(self, request):
         if not request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+            logger.warning(f"Unauthorized GET Request Blocked At {request.path}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        crew_users = User.objects.filter(groups__name="manager")
-        delivery_crew_users = UserSerializer(crew_users, many=True)
-        final_list = list(delivery_crew_users.data)
-        return Response(final_list, status=status.HTTP_200_OK)
+        managers = User.objects.filter(groups__name="manager")
+        serialized_managers = UserSerializer(managers, many=True)
+        return Response(serialized_managers.data, status=status.HTTP_200_OK)
 
 
-class DeliveryCrewUserManagement(CachedResponseMixin,
-    UpdateModelMixin, DestroyModelMixin, ListCreateAPIView
+class DeliveryCrewUserManagement(
+    CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView
 ):
-    """
-    Delivery Crew User Management API View.
-
-    This view manages user roles for the "delivery crew" group, specifically allowing managers to add or remove users from this group.
-    - **Add User to Delivery Crew Group**: Managers can assign users to the "delivery crew" group, enabling them to take delivery responsibilities.
-    - **Remove User from Delivery Crew Group**: Managers can remove users from the "delivery crew" group.
-    - **List Delivery Crew**: Provides a list of all users in the "delivery crew" group.
-
-    ### Permissions
-    - Only users in the "manager" group can access these operations.
-
-    Raises:
-    - **403 Forbidden**: If a non-manager attempts to access this view.
-    - **404 Not Found**: If the specified user does not exist.
-    - **400 Bad Request**: If required data, such as `username`, is missing.
-    """
 
     queryset = User.objects.all()
-    primary_model = User
-    cache_models = [ Group ]
     serializer_class = UserSerializer
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ["username", "first_name", "last_name"]
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        tags=["User Management"],
+        request={"type": "object", "properties": {"username": {"type": "string"}}},
+        responses={
+            201: OpenApiResponse(
+                response={"response": "Username added to delivery crew group."},
+                examples=[
+                    OpenApiExample(
+                        name="Add User to Delivery Crew Group",
+                        value={"response": "john_doe added to delivery crew group."},
+                        description="A user was successfully added to the delivery crew group.",
+                    )
+                ],
+            ),
+            400: OpenApiResponse(
+                response={"error": 'POST body must include "username".'},
+                description="Request missing required username field.",
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Non-managers cannot perform this action.",
+            ),
+        },
+    )
     def post(self, request):
         if not request.user.groups.filter(name="manager").exists():
+            logger.warning(f"Unauthorized POST Request Blocked At {request.path}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
@@ -292,10 +692,9 @@ class DeliveryCrewUserManagement(CachedResponseMixin,
         try:
             username = request.data["username"]
             user = get_object_or_404(User, username=username)
-            delivery_crew_group = Group.objects.get(name="delivery crew")
-            delivery_crew_group.user_set.add(user)
+            Group.objects.get(name="delivery crew").user_set.add(user)
             return Response(
-                {"response": f"{user.username} added to delivery crew."},
+                {"response": f"{user.username} added to delivery crew group."},
                 status=status.HTTP_201_CREATED,
             )
         except KeyError:
@@ -304,36 +703,87 @@ class DeliveryCrewUserManagement(CachedResponseMixin,
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+    @extend_schema(
+        tags=["User Management"],
+        responses={
+            200: OpenApiResponse(
+                response={"response": "Username removed from delivery crew group."},
+                examples=[
+                    OpenApiExample(
+                        name="Remove User from Manager Group",
+                        value={
+                            "response": "john_doe removed from delivery crew group."
+                        },
+                        description="A user was successfully removed from the delivery crew group.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Non-managers cannot perform this action.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "User not found."},
+                description="The specified user does not exist.",
+            ),
+        },
+    )
     def delete(self, request, id):
         if not request.user.groups.filter(name="manager").exists():
+            logger.warning(f"Unauthorized DELETE Request Blocked At {request.path}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
             )
         user = get_object_or_404(User, id=id)
-        delivery_crew_group = Group.objects.get(name="delivery crew")
-        delivery_crew_group.user_set.remove(user)
+        Group.objects.get(name="delivery crew").user_set.remove(user)
         return Response(
-            {"response": f"{user.username} removed from delivery crew."},
+            {"response": f"{user.username} removed from delivery crew group."},
             status=status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        tags=["User Management"],
+        responses={
+            200: OpenApiResponse(
+                response=UserSerializer(many=True),
+                examples=[
+                    OpenApiExample(
+                        name="List Delivery Crew",
+                        value=[
+                            {
+                                "id": 1,
+                                "username": "manager1",
+                                "first_name": "John",
+                                "last_name": "Doe",
+                            },
+                            {
+                                "id": 2,
+                                "username": "manager2",
+                                "first_name": "Jane",
+                                "last_name": "Smith",
+                            },
+                        ],
+                        description="List of all users in the manager group.",
+                    )
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Action restricted to managers only."},
+                description="Non-managers cannot perform this action.",
+            ),
+        },
+    )
     def get(self, request):
         if not request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  GET Request Blocked At {reverse('items-detail')}")
+            logger.warning(f"Unauthorized GET Request Blocked At {request.path}")
             return Response(
                 {"error": "Action restricted to managers only."},
                 status=status.HTTP_403_FORBIDDEN,
             )
-        all_users = User.objects.all()
-        crew_users = [
-            query_user
-            for query_user in all_users
-            if query_user.groups.filter(name="manager").exists()
-        ]
-        delivery_crew_users = UserSerializer(crew_users, many=True)
-        final_list = list(delivery_crew_users.data)
-        return Response(final_list, status=status.HTTP_200_OK)
+        managers = User.objects.filter(groups__name="delivery crew")
+        serialized_managers = UserSerializer(managers, many=True)
+        return Response(serialized_managers.data, status=status.HTTP_200_OK)
 
 
 class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
@@ -356,14 +806,66 @@ class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
 
     queryset = Cart.objects.all()
     primary_model = Cart
-    cache_models = [ Group ]
-    cache_models = [MenuItem, Group, User ]
+    cache_models = [Group]
+    cache_models = [MenuItem, Group, User]
     serializer_class = CartSerializer
     permission_classes = [IsAuthenticated]
 
     def calculate_price(self, quantity, unit_price):
-        return round(float(quantity) * float(unit_price),2)
+        return round(float(quantity) * float(unit_price), 2)
 
+    @extend_schema(
+        tags=["Order Management"],
+        responses={
+            200: OpenApiResponse(
+                response={"type": "object"},
+                description="Successfully retrieved the cart contents.",
+                examples=[
+                    OpenApiExample(
+                        name="Empty Cart",
+                        value={
+                            "cart": {
+                                "summary": {
+                                    "customer": "Doe, John",
+                                    "number_of_items": 0,
+                                    "total_cost_USD": "$0.00",
+                                },
+                                "contents": ["No Items Currently In Cart"],
+                            }
+                        },
+                    ),
+                    OpenApiExample(
+                        name="Non-Empty Cart",
+                        value={
+                            "cart": {
+                                "summary": {
+                                    "customer": "Doe, John",
+                                    "number_of_items": 3,
+                                    "total_cost_USD": "$45.00",
+                                },
+                                "contents": [
+                                    {
+                                        "product_name": "Spaghetti",
+                                        "product_sku": 1,
+                                        "quantity": 2,
+                                        "price per item": 10.0,
+                                        "price": 20.0,
+                                    },
+                                    {
+                                        "product_name": "Salad",
+                                        "product_sku": 2,
+                                        "quantity": 1,
+                                        "price per item": 25.0,
+                                        "price": 25.0,
+                                    },
+                                ],
+                            }
+                        },
+                    ),
+                ],
+            )
+        },
+    )
     def get(self, request):
         user = request.user
         cart_items = Cart.objects.filter(user=user)
@@ -376,7 +878,7 @@ class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
                     "product_name": cart.menuitem.title,
                     "product_sku": cart.menuitem.item_id,
                     "quantity": cart.quantity,
-                    "price per item": round(float(cart.menuitem.price),2),
+                    "price per item": round(float(cart.menuitem.price), 2),
                     "price": self.calculate_price(cart.quantity, cart.menuitem.price),
                 }
                 all_cart_items.append(item)
@@ -392,9 +894,10 @@ class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
                         },
                         "contents": all_cart_items,
                     }
-                }, status=status.HTTP_200_OK,
+                },
+                status=status.HTTP_200_OK,
             )
-        else: 
+        else:
             return Response(
                 {
                     "cart": {
@@ -403,13 +906,43 @@ class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
                             "number_of_items": item_count,
                             "total_cost_USD": f"${round(cart_total,2)}",
                         },
-                        "contents": ['No Items Currently In Cart']
+                        "contents": ["No Items Currently In Cart"],
                     }
-                },status=status.HTTP_200_OK,
+                },
+                status=status.HTTP_200_OK,
             )
-            
-        
 
+    @extend_schema(
+        tags=["Order Management"],
+        request={
+            "type": "object",
+            "properties": {
+                "item_id": {"type": "integer"},
+                "quantity": {"type": "integer"},
+            },
+        },
+        responses={
+            201: OpenApiResponse(
+                description="Item successfully added to the cart.",
+                examples=[
+                    OpenApiExample(
+                        name="Item Added",
+                        value={"response": "2 Spaghetti(s) added to johndoe's cart"},
+                    )
+                ],
+            ),
+            400: OpenApiResponse(
+                response={
+                    "error": 'Request body must include "quantity" and "item_id".'
+                },
+                description="Invalid request data.",
+            ),
+            404: OpenApiResponse(
+                response={"error": "Item does not exist."},
+                description="Item ID does not match any existing menu item.",
+            ),
+        },
+    )
     def post(self, request):
         try:
             return self._build_cart(request)
@@ -448,6 +981,20 @@ class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
             status=status.HTTP_201_CREATED,
         )
 
+    @extend_schema(
+        tags=["Order Management"],
+        responses={
+            200: OpenApiResponse(
+                description="Successfully cleared the cart.",
+                examples=[
+                    OpenApiExample(
+                        name="Cart Cleared",
+                        value={"response": "johndoe's cart cleared."},
+                    )
+                ],
+            )
+        },
+    )
     def delete(self, request):
         user = request.user
         Cart.objects.filter(user=user).delete()
@@ -456,35 +1003,37 @@ class CartManagement(CachedResponseMixin, RetrieveUpdateDestroyAPIView):
         )
 
 
-class OrderManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView):
+class OrderManagement(
+    CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, ListCreateAPIView
+):
     """
-        Order Management API View.
+    Order Management API View.
 
-        This view provides the functionality for creating, viewing, updating, and deleting orders.
-        - **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.
-        - **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.
-        - **Update Order**: Managers can assign delivery personnel and update the status of an order.
-        - **Delete Order**: Only managers can delete an order.
+    This view provides the functionality for creating, viewing, updating, and deleting orders.
+    - **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.
+    - **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.
+    - **Update Order**: Managers can assign delivery personnel and update the status of an order.
+    - **Delete Order**: Only managers can delete an order.
 
-        ### Filters and Search
-        - **Filter by**: `status`, `date`, `delivery_crew`, `user`
-        - **Search by**: `order_id`, `user`
+    ### Filters and Search
+    - **Filter by**: `status`, `date`, `delivery_crew`, `user`
+    - **Search by**: `order_id`, `user`
 
-        ### Permissions
-        - Only authenticated users can access order operations.
-        - Managers can view all orders and perform all actions.
-        - Delivery crew can view and update assigned orders.
-        - Customers can view and create their orders only.
-    
-        Raises:
-        - **403 Forbidden**: If a user tries to perform an unauthorized action.
-        - **404 Not Found**: If the specified order does not exist.
-        - **400 Bad Request**: If required fields are missing in the request.
-        - **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.
+    ### Permissions
+    - Only authenticated users can access order operations.
+    - Managers can view all orders and perform all actions.
+    - Delivery crew can view and update assigned orders.
+    - Customers can view and create their orders only.
+
+    Raises:
+    - **403 Forbidden**: If a user tries to perform an unauthorized action.
+    - **404 Not Found**: If the specified order does not exist.
+    - **400 Bad Request**: If required fields are missing in the request.
+    - **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.
     """
 
     queryset = Order.objects.all()
-    cache_models = [MenuItem, Group, User, Cart, OrderItem ]
+    cache_models = [MenuItem, Group, User, Cart, OrderItem]
     primary_model = Order
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -492,6 +1041,44 @@ class OrderManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, 
     filterset_fields = ["status", "date", "delivery_crew", "user"]
     search_fields = ["order_id", "user"]
 
+    @extend_schema(
+        tags=["Order Management"],
+        responses={
+            200: OpenApiResponse(
+                response=OrderSerializer(many=True),
+                description="Successfully retrieved the orders.",
+                examples=[
+                    OpenApiExample(
+                        name="Manager View",
+                        value=[
+                            {
+                                "order_id": 1,
+                                "user": "johndoe",
+                                "status": "Pending",
+                                "total": 45.0,
+                            },
+                            {
+                                "order_id": 2,
+                                "user": "janedoe",
+                                "status": "Completed",
+                                "total": 75.0,
+                            },
+                        ],
+                    ),
+                    OpenApiExample(
+                        name="Customer View",
+                        value=[
+                            {"order_id": 3, "status": "Pending", "total": 45.0},
+                        ],
+                    ),
+                ],
+            ),
+            403: OpenApiResponse(
+                response={"error": "Unauthorized access."},
+                description="User does not have permission to view these orders.",
+            ),
+        },
+    )
     def get_queryset(self):
         user = self.request.user
         if user.groups.filter(name="manager").exists():
@@ -500,16 +1087,43 @@ class OrderManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, 
             return Order.objects.filter(delivery_crew=user)
         return Order.objects.filter(user=user)
 
+    @extend_schema(
+        tags=["Order Management"],
+        request={"type": "object"},
+        responses={
+            201: OpenApiResponse(
+                description="Order created successfully.",
+                examples=[
+                    OpenApiExample(
+                        name="Order Created",
+                        value={"response": "Order 1234 created."},
+                    )
+                ],
+            ),
+            400: OpenApiResponse(
+                response={"error": "No items in cart."},
+                description="The cart is empty.",
+            ),
+            405: OpenApiResponse(
+                response={"error": "Managers cannot create orders."},
+                description="Action restricted to customers only.",
+            ),
+        },
+    )
     def post(self, request):
         if request.user.groups.filter(name="manager").exists():
-            logger.warning(f"Unauthorized  {request.method} Request Blocked At {request.path}")
+            logger.warning(
+                f"Unauthorized  {request.method} Request Blocked At {request.path}"
+            )
             return Response(
                 {"error": "Managers cannot create orders."},
                 status=status.HTTP_405_METHOD_NOT_ALLOWED,
             )
         carts = Cart.objects.filter(user=request.user)
         if not carts.exists():
-            logger.warning(f"Invalid {request.method} Request Blocked At {request.path}")
+            logger.warning(
+                f"Invalid {request.method} Request Blocked At {request.path}"
+            )
             return Response(
                 {"error": "No items in cart."}, status=status.HTTP_400_BAD_REQUEST
             )
@@ -524,7 +1138,7 @@ class OrderManagement(CachedResponseMixin, UpdateModelMixin, DestroyModelMixin, 
                 price=cart.price,
             )
             cart.delete()
-            
+
         return Response(
             {"response": f"Order {new_order.order_id} created."},
             status=status.HTTP_201_CREATED,

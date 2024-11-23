@@ -1,13 +1,14 @@
-from rest_framework.test import APIClient, APITransactionTestCase
+import json
+
+from django.contrib.auth.models import Group, User
 from django.test import TestCase
+from django.urls import reverse
+from loguru import logger
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient, APITransactionTestCase
 
 # Create your tests here.
-from LittleLemonAPI.models import MenuItem, Category
-from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User, Group
-from django.urls import reverse
-import json
-from loguru import logger
+from LittleLemonAPI.models import Category, MenuItem
 
 
 class TestGetTransactions(TestCase):

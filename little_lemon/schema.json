@@ -1,0 +1,3699 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "The Little Lemon API",
+        "version": "1.0.0",
+        "description": "The Little Lemon API project is Terry Brooks' final project for Meta's APIs course on Coursera. For more information about the course, visit the Coursera course page. The source code for this project is available on GitHub for learning purposes.",
+        "contact": {
+            "name": "Terry A. Brooks, Jr.",
+            "url": "https://brooksjr.com",
+            "email": "terry@brooksjr.com"
+        }
+    },
+    "paths": {
+        "/": {
+            "get": {
+                "operationId": "root_retrieve",
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/cart/menu-items": {
+            "get": {
+                "operationId": "api_cart_menu_items_retrieve",
+                "description": "User Cart Management API View.\n\nThis view manages the shopping cart for authenticated users.\n- **Retrieve Cart**: Displays the contents of the user’s cart, including item names, quantities, and total prices.\n- **Add to Cart**: Allows users to add items to their cart by specifying item ID and quantity.\n- **Clear Cart**: Clears all items in the user’s cart.\n\n### Permissions\n- Only authenticated users can access cart operations.\n\nRaises:\n- **400 Bad Request**: If required fields are missing in the request body (e.g., `quantity`, `item_id`).\n- **404 Not Found**: If the specified item does not exist.\n- **403 Forbidden**: If a user tries to perform unauthorized cart actions.",
+                "tags": [
+                    "Order Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                },
+                                "examples": {
+                                    "EmptyCart": {
+                                        "value": {
+                                            "cart": {
+                                                "summary": {
+                                                    "customer": "Doe, John",
+                                                    "number_of_items": 0,
+                                                    "total_cost_USD": "$0.00"
+                                                },
+                                                "contents": [
+                                                    "No Items Currently In Cart"
+                                                ]
+                                            }
+                                        },
+                                        "summary": "Empty Cart"
+                                    },
+                                    "Non-EmptyCart": {
+                                        "value": {
+                                            "cart": {
+                                                "summary": {
+                                                    "customer": "Doe, John",
+                                                    "number_of_items": 3,
+                                                    "total_cost_USD": "$45.00"
+                                                },
+                                                "contents": [
+                                                    {
+                                                        "product_name": "Spaghetti",
+                                                        "product_sku": 1,
+                                                        "quantity": 2,
+                                                        "price per item": 10.0,
+                                                        "price": 20.0
+                                                    },
+                                                    {
+                                                        "product_name": "Salad",
+                                                        "product_sku": 2,
+                                                        "quantity": 1,
+                                                        "price per item": 25.0,
+                                                        "price": 25.0
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "summary": "Non-Empty Cart"
+                                    }
+                                }
+                            }
+                        },
+                        "description": "Successfully retrieved the cart contents."
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_cart_menu_items_create",
+                "description": "User Cart Management API View.\n\nThis view manages the shopping cart for authenticated users.\n- **Retrieve Cart**: Displays the contents of the user’s cart, including item names, quantities, and total prices.\n- **Add to Cart**: Allows users to add items to their cart by specifying item ID and quantity.\n- **Clear Cart**: Clears all items in the user’s cart.\n\n### Permissions\n- Only authenticated users can access cart operations.\n\nRaises:\n- **400 Bad Request**: If required fields are missing in the request body (e.g., `quantity`, `item_id`).\n- **404 Not Found**: If the specified item does not exist.\n- **403 Forbidden**: If a user tries to perform unauthorized cart actions.",
+                "tags": [
+                    "Order Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        },
+                        "properties": {
+                            "schema": {
+                                "item_id": {
+                                    "type": "integer"
+                                },
+                                "quantity": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Item successfully added to the cart."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Request body must include \"quantity\" and \"item_id\"."
+                                }
+                            }
+                        },
+                        "description": "Invalid request data."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Item does not exist."
+                                }
+                            }
+                        },
+                        "description": "Item ID does not match any existing menu item."
+                    }
+                }
+            },
+            "put": {
+                "operationId": "api_cart_menu_items_update",
+                "description": "User Cart Management API View.\n\nThis view manages the shopping cart for authenticated users.\n- **Retrieve Cart**: Displays the contents of the user’s cart, including item names, quantities, and total prices.\n- **Add to Cart**: Allows users to add items to their cart by specifying item ID and quantity.\n- **Clear Cart**: Clears all items in the user’s cart.\n\n### Permissions\n- Only authenticated users can access cart operations.\n\nRaises:\n- **400 Bad Request**: If required fields are missing in the request body (e.g., `quantity`, `item_id`).\n- **404 Not Found**: If the specified item does not exist.\n- **403 Forbidden**: If a user tries to perform unauthorized cart actions.",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Cart"
+                            },
+                            "examples": {
+                                "CartExample": {
+                                    "value": {
+                                        "cart": {
+                                            "summary": {
+                                                "customer": "Doe, John",
+                                                "number_of_items": 2,
+                                                "total_cost_USD": "$11.98"
+                                            },
+                                            "contents": [
+                                                {
+                                                    "product_sku": 123,
+                                                    "product_name": "Apple Pie",
+                                                    "price_per_item": 5.99,
+                                                    "quantity": 2
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "summary": "Cart Example",
+                                    "description": "Representation of a cart item. Includes menu item ID, quantity, user ID, and the total price."
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Cart"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Cart"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Cart"
+                                },
+                                "examples": {
+                                    "CartExample": {
+                                        "value": {
+                                            "cart": {
+                                                "summary": {
+                                                    "customer": "Doe, John",
+                                                    "number_of_items": 2,
+                                                    "total_cost_USD": "$11.98"
+                                                },
+                                                "contents": [
+                                                    {
+                                                        "product_sku": 123,
+                                                        "product_name": "Apple Pie",
+                                                        "price_per_item": 5.99,
+                                                        "quantity": 2
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "summary": "Cart Example",
+                                        "description": "Representation of a cart item. Includes menu item ID, quantity, user ID, and the total price."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "api_cart_menu_items_partial_update",
+                "description": "User Cart Management API View.\n\nThis view manages the shopping cart for authenticated users.\n- **Retrieve Cart**: Displays the contents of the user’s cart, including item names, quantities, and total prices.\n- **Add to Cart**: Allows users to add items to their cart by specifying item ID and quantity.\n- **Clear Cart**: Clears all items in the user’s cart.\n\n### Permissions\n- Only authenticated users can access cart operations.\n\nRaises:\n- **400 Bad Request**: If required fields are missing in the request body (e.g., `quantity`, `item_id`).\n- **404 Not Found**: If the specified item does not exist.\n- **403 Forbidden**: If a user tries to perform unauthorized cart actions.",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCart"
+                            },
+                            "examples": {
+                                "CartExample": {
+                                    "value": {
+                                        "cart": {
+                                            "summary": {
+                                                "customer": "Doe, John",
+                                                "number_of_items": 2,
+                                                "total_cost_USD": "$11.98"
+                                            },
+                                            "contents": [
+                                                {
+                                                    "product_sku": 123,
+                                                    "product_name": "Apple Pie",
+                                                    "price_per_item": 5.99,
+                                                    "quantity": 2
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "summary": "Cart Example",
+                                    "description": "Representation of a cart item. Includes menu item ID, quantity, user ID, and the total price."
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCart"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCart"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Cart"
+                                },
+                                "examples": {
+                                    "CartExample": {
+                                        "value": {
+                                            "cart": {
+                                                "summary": {
+                                                    "customer": "Doe, John",
+                                                    "number_of_items": 2,
+                                                    "total_cost_USD": "$11.98"
+                                                },
+                                                "contents": [
+                                                    {
+                                                        "product_sku": 123,
+                                                        "product_name": "Apple Pie",
+                                                        "price_per_item": 5.99,
+                                                        "quantity": 2
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "summary": "Cart Example",
+                                        "description": "Representation of a cart item. Includes menu item ID, quantity, user ID, and the total price."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_cart_menu_items_destroy",
+                "description": "User Cart Management API View.\n\nThis view manages the shopping cart for authenticated users.\n- **Retrieve Cart**: Displays the contents of the user’s cart, including item names, quantities, and total prices.\n- **Add to Cart**: Allows users to add items to their cart by specifying item ID and quantity.\n- **Clear Cart**: Clears all items in the user’s cart.\n\n### Permissions\n- Only authenticated users can access cart operations.\n\nRaises:\n- **400 Bad Request**: If required fields are missing in the request body (e.g., `quantity`, `item_id`).\n- **404 Not Found**: If the specified item does not exist.\n- **403 Forbidden**: If a user tries to perform unauthorized cart actions.",
+                "tags": [
+                    "Order Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully cleared the cart."
+                    }
+                }
+            }
+        },
+        "/api/groups/delivery-crew/user": {
+            "get": {
+                "operationId": "api_groups_delivery_crew_user_list",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedUserList"
+                                },
+                                "examples": {
+                                    "ListDeliveryCrew": {
+                                        "value": {
+                                            "count": 123,
+                                            "next": "http://api.example.org/accounts/?offset=400&limit=100",
+                                            "previous": "http://api.example.org/accounts/?offset=200&limit=100",
+                                            "results": [
+                                                [
+                                                    {
+                                                        "id": 1,
+                                                        "username": "manager1",
+                                                        "first_name": "John",
+                                                        "last_name": "Doe"
+                                                    },
+                                                    {
+                                                        "id": 2,
+                                                        "username": "manager2",
+                                                        "first_name": "Jane",
+                                                        "last_name": "Smith"
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        "summary": "List Delivery Crew",
+                                        "description": "List of all users in the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_groups_delivery_crew_user_create",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "tags": [
+                    "User Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        },
+                        "properties": {
+                            "schema": {
+                                "username": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username added to delivery crew group."
+                                },
+                                "examples": {
+                                    "AddUserToDeliveryCrewGroup": {
+                                        "value": {
+                                            "response": "john_doe added to delivery crew group."
+                                        },
+                                        "summary": "Add User to Delivery Crew Group",
+                                        "description": "A user was successfully added to the delivery crew group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "POST body must include \"username\"."
+                                }
+                            }
+                        },
+                        "description": "Request missing required username field."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_groups_delivery_crew_user_destroy",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username removed from delivery crew group."
+                                },
+                                "examples": {
+                                    "RemoveUserFromManagerGroup": {
+                                        "value": {
+                                            "response": "john_doe removed from delivery crew group."
+                                        },
+                                        "summary": "Remove User from Manager Group",
+                                        "description": "A user was successfully removed from the delivery crew group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "User not found."
+                                }
+                            }
+                        },
+                        "description": "The specified user does not exist."
+                    }
+                }
+            }
+        },
+        "/api/groups/delivery-crew/user/{id}": {
+            "get": {
+                "operationId": "api_groups_delivery_crew_user_list_2",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedUserList"
+                                },
+                                "examples": {
+                                    "ListDeliveryCrew": {
+                                        "value": {
+                                            "count": 123,
+                                            "next": "http://api.example.org/accounts/?offset=400&limit=100",
+                                            "previous": "http://api.example.org/accounts/?offset=200&limit=100",
+                                            "results": [
+                                                [
+                                                    {
+                                                        "id": 1,
+                                                        "username": "manager1",
+                                                        "first_name": "John",
+                                                        "last_name": "Doe"
+                                                    },
+                                                    {
+                                                        "id": 2,
+                                                        "username": "manager2",
+                                                        "first_name": "Jane",
+                                                        "last_name": "Smith"
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        "summary": "List Delivery Crew",
+                                        "description": "List of all users in the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_groups_delivery_crew_user_create_2",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        },
+                        "properties": {
+                            "schema": {
+                                "username": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username added to delivery crew group."
+                                },
+                                "examples": {
+                                    "AddUserToDeliveryCrewGroup": {
+                                        "value": {
+                                            "response": "john_doe added to delivery crew group."
+                                        },
+                                        "summary": "Add User to Delivery Crew Group",
+                                        "description": "A user was successfully added to the delivery crew group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "POST body must include \"username\"."
+                                }
+                            }
+                        },
+                        "description": "Request missing required username field."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_groups_delivery_crew_user_destroy_2",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username removed from delivery crew group."
+                                },
+                                "examples": {
+                                    "RemoveUserFromManagerGroup": {
+                                        "value": {
+                                            "response": "john_doe removed from delivery crew group."
+                                        },
+                                        "summary": "Remove User from Manager Group",
+                                        "description": "A user was successfully removed from the delivery crew group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "User not found."
+                                }
+                            }
+                        },
+                        "description": "The specified user does not exist."
+                    }
+                }
+            }
+        },
+        "/api/groups/managers/user": {
+            "get": {
+                "operationId": "api_groups_managers_user_list",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedUserList"
+                                },
+                                "examples": {
+                                    "ListManagers": {
+                                        "value": {
+                                            "count": 123,
+                                            "next": "http://api.example.org/accounts/?offset=400&limit=100",
+                                            "previous": "http://api.example.org/accounts/?offset=200&limit=100",
+                                            "results": [
+                                                [
+                                                    {
+                                                        "id": 1,
+                                                        "username": "manager1",
+                                                        "first_name": "John",
+                                                        "last_name": "Doe"
+                                                    },
+                                                    {
+                                                        "id": 2,
+                                                        "username": "manager2",
+                                                        "first_name": "Jane",
+                                                        "last_name": "Smith"
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        "summary": "List Managers",
+                                        "description": "List of all users in the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_groups_managers_user_create",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "tags": [
+                    "User Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        },
+                        "properties": {
+                            "schema": {
+                                "username": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username added to manager group."
+                                },
+                                "examples": {
+                                    "AddUserToManagerGroup": {
+                                        "value": {
+                                            "response": "john_doe added to manager group."
+                                        },
+                                        "summary": "Add User to Manager Group",
+                                        "description": "A user was successfully added to the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "POST body must include \"username\"."
+                                }
+                            }
+                        },
+                        "description": "Request missing required username field."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_groups_managers_user_destroy",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username removed from manager group."
+                                },
+                                "examples": {
+                                    "RemoveUserFromManagerGroup": {
+                                        "value": {
+                                            "response": "john_doe removed from manager group."
+                                        },
+                                        "summary": "Remove User from Manager Group",
+                                        "description": "A user was successfully removed from the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "User not found."
+                                }
+                            }
+                        },
+                        "description": "The specified user does not exist."
+                    }
+                }
+            }
+        },
+        "/api/groups/managers/user/{id}": {
+            "get": {
+                "operationId": "api_groups_managers_user_list_2",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedUserList"
+                                },
+                                "examples": {
+                                    "ListManagers": {
+                                        "value": {
+                                            "count": 123,
+                                            "next": "http://api.example.org/accounts/?offset=400&limit=100",
+                                            "previous": "http://api.example.org/accounts/?offset=200&limit=100",
+                                            "results": [
+                                                [
+                                                    {
+                                                        "id": 1,
+                                                        "username": "manager1",
+                                                        "first_name": "John",
+                                                        "last_name": "Doe"
+                                                    },
+                                                    {
+                                                        "id": 2,
+                                                        "username": "manager2",
+                                                        "first_name": "Jane",
+                                                        "last_name": "Smith"
+                                                    }
+                                                ]
+                                            ]
+                                        },
+                                        "summary": "List Managers",
+                                        "description": "List of all users in the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_groups_managers_user_create_2",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        },
+                        "properties": {
+                            "schema": {
+                                "username": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username added to manager group."
+                                },
+                                "examples": {
+                                    "AddUserToManagerGroup": {
+                                        "value": {
+                                            "response": "john_doe added to manager group."
+                                        },
+                                        "summary": "Add User to Manager Group",
+                                        "description": "A user was successfully added to the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "POST body must include \"username\"."
+                                }
+                            }
+                        },
+                        "description": "Request missing required username field."
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_groups_managers_user_destroy_2",
+                "description": "Mixin class to provide caching functionality for API responses.\n\nThis mixin allows views to cache their responses based on user identity and query parameters,\nimproving performance by reducing the need for repeated database queries.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "User Management"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "response": "Username removed from manager group."
+                                },
+                                "examples": {
+                                    "RemoveUserFromManagerGroup": {
+                                        "value": {
+                                            "response": "john_doe removed from manager group."
+                                        },
+                                        "summary": "Remove User from Manager Group",
+                                        "description": "A user was successfully removed from the manager group."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    },
+                    "403": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Action restricted to managers only."
+                                }
+                            }
+                        },
+                        "description": "Non-managers cannot perform this action."
+                    },
+                    "404": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "User not found."
+                                }
+                            }
+                        },
+                        "description": "The specified user does not exist."
+                    }
+                }
+            }
+        },
+        "/api/menu-items/": {
+            "get": {
+                "operationId": "api_menu_items_list",
+                "description": "Menu Items List and Creation API View.\n\nThis view provides a comprehensive interface for listing and creating menu items in the system.\n- **Listing**: All users can view the list of menu items, which includes filtering and searching functionalities.\n- **Creation**: Only users in the \"manager\" group are permitted to create new menu items. When a manager creates an item, the menu item details (such as title, description, and category) are validated and stored.\n\n### Filters and Search\n- **Filter by**: `featured`, `category`\n- **Search by**: `title`\n\n### Permissions\n- Authenticated users can view the menu items (read-only).\n- Only users in the \"manager\" group can create new menu items.\n\nRaises:\n- **403 Forbidden**: If a non-manager attempts to create a menu item.\n- **400 Bad Request**: If an item creation fails due to invalid data.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "category",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "contains_dairy",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "contains_gluten",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "contains_treenuts",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "featured",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "is_on_sale",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedMenuItemList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_menu_items_create",
+                "description": "Menu Items List and Creation API View.\n\nThis view provides a comprehensive interface for listing and creating menu items in the system.\n- **Listing**: All users can view the list of menu items, which includes filtering and searching functionalities.\n- **Creation**: Only users in the \"manager\" group are permitted to create new menu items. When a manager creates an item, the menu item details (such as title, description, and category) are validated and stored.\n\n### Filters and Search\n- **Filter by**: `featured`, `category`\n- **Search by**: `title`\n\n### Permissions\n- Authenticated users can view the menu items (read-only).\n- Only users in the \"manager\" group can create new menu items.\n\nRaises:\n- **403 Forbidden**: If a non-manager attempts to create a menu item.\n- **400 Bad Request**: If an item creation fails due to invalid data.",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuItem"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuItem"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuItem"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuItem"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/menu-items/{item_id}": {
+            "get": {
+                "operationId": "api_menu_items_retrieve",
+                "description": "Menu Item Detail, Update, and Delete API View.\n\nThis view provides detailed access to a single menu item, allowing retrieval, updates, and deletion.\n- **Retrieve**: All authenticated users can view the details of a specific menu item.\n- **Update and Delete**: Only users in the \"manager\" group can modify or delete menu items.\n\n### Permissions\n- Authenticated users can retrieve menu item details (read-only).\n- Only managers can update or delete a menu item.\n\nRaises:\n- **403 Forbidden**: If a non-manager attempts to update or delete a menu item.\n- **404 Not Found**: If the menu item does not exist.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "item_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuItemDetail"
+                                },
+                                "examples": {
+                                    "ExampleMenuItem": {
+                                        "value": {
+                                            "product_sku": 1,
+                                            "category": "Main Course",
+                                            "product_name": "Spaghetti Bolognese",
+                                            "price_per_item": 12.99,
+                                            "featured": true,
+                                            "on_sale": false,
+                                            "nutritional_facts": {
+                                                "calories": 250,
+                                                "sugar": "5 gram(s)",
+                                                "protein": "10 gram(s)",
+                                                "carbohydrates": "50 milligram(s)",
+                                                "saturated_fat": "3 gram(s)"
+                                            },
+                                            "allergens": {
+                                                "contains_dairy": true,
+                                                "contains_gluten": true,
+                                                "contains_treenuts": false
+                                            }
+                                        },
+                                        "summary": "Example Menu Item",
+                                        "description": "Detailed representation of a menu item with nutritional information and allergens."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "api_menu_items_update",
+                "description": "Menu Item Detail, Update, and Delete API View.\n\nThis view provides detailed access to a single menu item, allowing retrieval, updates, and deletion.\n- **Retrieve**: All authenticated users can view the details of a specific menu item.\n- **Update and Delete**: Only users in the \"manager\" group can modify or delete menu items.\n\n### Permissions\n- Authenticated users can retrieve menu item details (read-only).\n- Only managers can update or delete a menu item.\n\nRaises:\n- **403 Forbidden**: If a non-manager attempts to update or delete a menu item.\n- **404 Not Found**: If the menu item does not exist.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "item_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuItemDetail"
+                            },
+                            "examples": {
+                                "ExampleMenuItem": {
+                                    "value": {
+                                        "product_sku": 1,
+                                        "category": "Main Course",
+                                        "product_name": "Spaghetti Bolognese",
+                                        "price_per_item": 12.99,
+                                        "featured": true,
+                                        "on_sale": false,
+                                        "nutritional_facts": {
+                                            "calories": 250,
+                                            "sugar": "5 gram(s)",
+                                            "protein": "10 gram(s)",
+                                            "carbohydrates": "50 milligram(s)",
+                                            "saturated_fat": "3 gram(s)"
+                                        },
+                                        "allergens": {
+                                            "contains_dairy": true,
+                                            "contains_gluten": true,
+                                            "contains_treenuts": false
+                                        }
+                                    },
+                                    "summary": "Example Menu Item",
+                                    "description": "Detailed representation of a menu item with nutritional information and allergens."
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuItemDetail"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/MenuItemDetail"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuItemDetail"
+                                },
+                                "examples": {
+                                    "ExampleMenuItem": {
+                                        "value": {
+                                            "product_sku": 1,
+                                            "category": "Main Course",
+                                            "product_name": "Spaghetti Bolognese",
+                                            "price_per_item": 12.99,
+                                            "featured": true,
+                                            "on_sale": false,
+                                            "nutritional_facts": {
+                                                "calories": 250,
+                                                "sugar": "5 gram(s)",
+                                                "protein": "10 gram(s)",
+                                                "carbohydrates": "50 milligram(s)",
+                                                "saturated_fat": "3 gram(s)"
+                                            },
+                                            "allergens": {
+                                                "contains_dairy": true,
+                                                "contains_gluten": true,
+                                                "contains_treenuts": false
+                                            }
+                                        },
+                                        "summary": "Example Menu Item",
+                                        "description": "Detailed representation of a menu item with nutritional information and allergens."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "api_menu_items_partial_update",
+                "description": "Menu Item Detail, Update, and Delete API View.\n\nThis view provides detailed access to a single menu item, allowing retrieval, updates, and deletion.\n- **Retrieve**: All authenticated users can view the details of a specific menu item.\n- **Update and Delete**: Only users in the \"manager\" group can modify or delete menu items.\n\n### Permissions\n- Authenticated users can retrieve menu item details (read-only).\n- Only managers can update or delete a menu item.\n\nRaises:\n- **403 Forbidden**: If a non-manager attempts to update or delete a menu item.\n- **404 Not Found**: If the menu item does not exist.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "item_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedMenuItemDetail"
+                            },
+                            "examples": {
+                                "ExampleMenuItem": {
+                                    "value": {
+                                        "product_sku": 1,
+                                        "category": "Main Course",
+                                        "product_name": "Spaghetti Bolognese",
+                                        "price_per_item": 12.99,
+                                        "featured": true,
+                                        "on_sale": false,
+                                        "nutritional_facts": {
+                                            "calories": 250,
+                                            "sugar": "5 gram(s)",
+                                            "protein": "10 gram(s)",
+                                            "carbohydrates": "50 milligram(s)",
+                                            "saturated_fat": "3 gram(s)"
+                                        },
+                                        "allergens": {
+                                            "contains_dairy": true,
+                                            "contains_gluten": true,
+                                            "contains_treenuts": false
+                                        }
+                                    },
+                                    "summary": "Example Menu Item",
+                                    "description": "Detailed representation of a menu item with nutritional information and allergens."
+                                }
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedMenuItemDetail"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedMenuItemDetail"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MenuItemDetail"
+                                },
+                                "examples": {
+                                    "ExampleMenuItem": {
+                                        "value": {
+                                            "product_sku": 1,
+                                            "category": "Main Course",
+                                            "product_name": "Spaghetti Bolognese",
+                                            "price_per_item": 12.99,
+                                            "featured": true,
+                                            "on_sale": false,
+                                            "nutritional_facts": {
+                                                "calories": 250,
+                                                "sugar": "5 gram(s)",
+                                                "protein": "10 gram(s)",
+                                                "carbohydrates": "50 milligram(s)",
+                                                "saturated_fat": "3 gram(s)"
+                                            },
+                                            "allergens": {
+                                                "contains_dairy": true,
+                                                "contains_gluten": true,
+                                                "contains_treenuts": false
+                                            }
+                                        },
+                                        "summary": "Example Menu Item",
+                                        "description": "Detailed representation of a menu item with nutritional information and allergens."
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_menu_items_destroy",
+                "description": "Menu Item Detail, Update, and Delete API View.\n\nThis view provides detailed access to a single menu item, allowing retrieval, updates, and deletion.\n- **Retrieve**: All authenticated users can view the details of a specific menu item.\n- **Update and Delete**: Only users in the \"manager\" group can modify or delete menu items.\n\n### Permissions\n- Authenticated users can retrieve menu item details (read-only).\n- Only managers can update or delete a menu item.\n\nRaises:\n- **403 Forbidden**: If a non-manager attempts to update or delete a menu item.\n- **404 Not Found**: If the menu item does not exist.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "item_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/orders": {
+            "get": {
+                "operationId": "api_orders_list",
+                "description": "Order Management API View.\n\nThis view provides the functionality for creating, viewing, updating, and deleting orders.\n- **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.\n- **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.\n- **Update Order**: Managers can assign delivery personnel and update the status of an order.\n- **Delete Order**: Only managers can delete an order.\n\n### Filters and Search\n- **Filter by**: `status`, `date`, `delivery_crew`, `user`\n- **Search by**: `order_id`, `user`\n\n### Permissions\n- Only authenticated users can access order operations.\n- Managers can view all orders and perform all actions.\n- Delivery crew can view and update assigned orders.\n- Customers can view and create their orders only.\n\nRaises:\n- **403 Forbidden**: If a user tries to perform an unauthorized action.\n- **404 Not Found**: If the specified order does not exist.\n- **400 Bad Request**: If required fields are missing in the request.\n- **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "delivery_crew",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "user",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedOrderList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_orders_create",
+                "description": "Order Management API View.\n\nThis view provides the functionality for creating, viewing, updating, and deleting orders.\n- **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.\n- **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.\n- **Update Order**: Managers can assign delivery personnel and update the status of an order.\n- **Delete Order**: Only managers can delete an order.\n\n### Filters and Search\n- **Filter by**: `status`, `date`, `delivery_crew`, `user`\n- **Search by**: `order_id`, `user`\n\n### Permissions\n- Only authenticated users can access order operations.\n- Managers can view all orders and perform all actions.\n- Delivery crew can view and update assigned orders.\n- Customers can view and create their orders only.\n\nRaises:\n- **403 Forbidden**: If a user tries to perform an unauthorized action.\n- **404 Not Found**: If the specified order does not exist.\n- **400 Bad Request**: If required fields are missing in the request.\n- **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.",
+                "tags": [
+                    "Order Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "No items in cart."
+                                }
+                            }
+                        },
+                        "description": "The cart is empty."
+                    },
+                    "405": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Managers cannot create orders."
+                                }
+                            }
+                        },
+                        "description": "Action restricted to customers only."
+                    }
+                }
+            }
+        },
+        "/api/orders/{order_id}": {
+            "get": {
+                "operationId": "api_orders_list_2",
+                "description": "Order Management API View.\n\nThis view provides the functionality for creating, viewing, updating, and deleting orders.\n- **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.\n- **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.\n- **Update Order**: Managers can assign delivery personnel and update the status of an order.\n- **Delete Order**: Only managers can delete an order.\n\n### Filters and Search\n- **Filter by**: `status`, `date`, `delivery_crew`, `user`\n- **Search by**: `order_id`, `user`\n\n### Permissions\n- Only authenticated users can access order operations.\n- Managers can view all orders and perform all actions.\n- Delivery crew can view and update assigned orders.\n- Customers can view and create their orders only.\n\nRaises:\n- **403 Forbidden**: If a user tries to perform an unauthorized action.\n- **404 Not Found**: If the specified order does not exist.\n- **400 Bad Request**: If required fields are missing in the request.\n- **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "delivery_crew",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "in": "path",
+                        "name": "order_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "status",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "user",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedOrderList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_orders_create_2",
+                "description": "Order Management API View.\n\nThis view provides the functionality for creating, viewing, updating, and deleting orders.\n- **Retrieve Orders**: Allows users to retrieve orders based on their role. Managers see all orders, delivery crew sees their assigned orders, and customers see only their own orders.\n- **Create Order**: Customers can create an order based on the contents of their cart. Cart items are moved to the order, and the cart is cleared.\n- **Update Order**: Managers can assign delivery personnel and update the status of an order.\n- **Delete Order**: Only managers can delete an order.\n\n### Filters and Search\n- **Filter by**: `status`, `date`, `delivery_crew`, `user`\n- **Search by**: `order_id`, `user`\n\n### Permissions\n- Only authenticated users can access order operations.\n- Managers can view all orders and perform all actions.\n- Delivery crew can view and update assigned orders.\n- Customers can view and create their orders only.\n\nRaises:\n- **403 Forbidden**: If a user tries to perform an unauthorized action.\n- **404 Not Found**: If the specified order does not exist.\n- **400 Bad Request**: If required fields are missing in the request.\n- **405 Method Not Allowed**: If managers or delivery crew attempt to create orders.",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "order_id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "Order Management"
+                ],
+                "requestBody": {
+                    "content": {
+                        "type": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Unspecified request body"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Order created successfully."
+                    },
+                    "400": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "No items in cart."
+                                }
+                            }
+                        },
+                        "description": "The cart is empty."
+                    },
+                    "405": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "error": "Managers cannot create orders."
+                                }
+                            }
+                        },
+                        "description": "Action restricted to customers only."
+                    }
+                }
+            }
+        },
+        "/api/schema": {
+            "get": {
+                "operationId": "api_schema_retrieve",
+                "description": "OpenApi3 schema for this API. Format can be selected via content negotiation.\n\n- YAML: application/vnd.oai.openapi\n- JSON: application/vnd.oai.openapi+json",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "format",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "json",
+                                "yaml"
+                            ]
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "lang",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "af",
+                                "ar",
+                                "ar-dz",
+                                "ast",
+                                "az",
+                                "be",
+                                "bg",
+                                "bn",
+                                "br",
+                                "bs",
+                                "ca",
+                                "ckb",
+                                "cs",
+                                "cy",
+                                "da",
+                                "de",
+                                "dsb",
+                                "el",
+                                "en",
+                                "en-au",
+                                "en-gb",
+                                "eo",
+                                "es",
+                                "es-ar",
+                                "es-co",
+                                "es-mx",
+                                "es-ni",
+                                "es-ve",
+                                "et",
+                                "eu",
+                                "fa",
+                                "fi",
+                                "fr",
+                                "fy",
+                                "ga",
+                                "gd",
+                                "gl",
+                                "he",
+                                "hi",
+                                "hr",
+                                "hsb",
+                                "hu",
+                                "hy",
+                                "ia",
+                                "id",
+                                "ig",
+                                "io",
+                                "is",
+                                "it",
+                                "ja",
+                                "ka",
+                                "kab",
+                                "kk",
+                                "km",
+                                "kn",
+                                "ko",
+                                "ky",
+                                "lb",
+                                "lt",
+                                "lv",
+                                "mk",
+                                "ml",
+                                "mn",
+                                "mr",
+                                "ms",
+                                "my",
+                                "nb",
+                                "ne",
+                                "nl",
+                                "nn",
+                                "os",
+                                "pa",
+                                "pl",
+                                "pt",
+                                "pt-br",
+                                "ro",
+                                "ru",
+                                "sk",
+                                "sl",
+                                "sq",
+                                "sr",
+                                "sr-latn",
+                                "sv",
+                                "sw",
+                                "ta",
+                                "te",
+                                "tg",
+                                "th",
+                                "tk",
+                                "tr",
+                                "tt",
+                                "udm",
+                                "ug",
+                                "uk",
+                                "ur",
+                                "uz",
+                                "vi",
+                                "zh-hans",
+                                "zh-hant"
+                            ]
+                        }
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/vnd.oai.openapi": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "application/yaml": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "application/vnd.oai.openapi+json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": {}
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/token/login/": {
+            "post": {
+                "operationId": "api_users_token_login_create",
+                "description": "Use this endpoint to obtain user authentication token.",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenCreate"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenCreate"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenCreate"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenCreate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/token/logout/": {
+            "post": {
+                "operationId": "api_users_token_logout_create",
+                "description": "Use this endpoint to logout user (remove user authentication token).",
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/users/users/": {
+            "get": {
+                "operationId": "api_users_users_list",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedUserList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "api_users_users_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreate"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreate"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserCreate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/{id}/": {
+            "get": {
+                "operationId": "api_users_users_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "api_users_users_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "api_users_users_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUser"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUser"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUser"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_users_users_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this user.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/users/users/activation/": {
+            "post": {
+                "operationId": "api_users_users_activation_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Activation"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Activation"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Activation"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Activation"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/me/": {
+            "get": {
+                "operationId": "api_users_users_me_retrieve",
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "api_users_users_me_update",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/User"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "api_users_users_me_partial_update",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUser"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUser"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedUser"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "api_users_users_me_destroy",
+                "tags": [
+                    "api"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/users/users/resend_activation/": {
+            "post": {
+                "operationId": "api_users_users_resend_activation_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SendEmailReset"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/reset_password/": {
+            "post": {
+                "operationId": "api_users_users_reset_password_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SendEmailReset"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/reset_password_confirm/": {
+            "post": {
+                "operationId": "api_users_users_reset_password_confirm_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetConfirm"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetConfirm"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PasswordResetConfirm"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PasswordResetConfirm"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/reset_username/": {
+            "post": {
+                "operationId": "api_users_users_reset_username_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SendEmailReset"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SendEmailReset"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/reset_username_confirm/": {
+            "post": {
+                "operationId": "api_users_users_reset_username_confirm_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UsernameResetConfirm"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UsernameResetConfirm"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UsernameResetConfirm"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UsernameResetConfirm"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/set_password/": {
+            "post": {
+                "operationId": "api_users_users_set_password_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetPassword"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetPassword"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetPassword"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SetPassword"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/users/users/set_username/": {
+            "post": {
+                "operationId": "api_users_users_set_username_create",
+                "tags": [
+                    "api"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetUsername"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetUsername"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SetUsername"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SetUsername"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/token/login/": {
+            "post": {
+                "operationId": "token_login_create",
+                "description": "Use this endpoint to obtain user authentication token.",
+                "tags": [
+                    "token"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenCreate"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenCreate"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TokenCreate"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "tokenAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenCreate"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/token/logout/": {
+            "post": {
+                "operationId": "token_logout_create",
+                "description": "Use this endpoint to logout user (remove user authentication token).",
+                "tags": [
+                    "token"
+                ],
+                "security": [
+                    {
+                        "tokenAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Activation": {
+                "type": "object",
+                "properties": {
+                    "uid": {
+                        "type": "string"
+                    },
+                    "token": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "token",
+                    "uid"
+                ]
+            },
+            "Cart": {
+                "type": "object",
+                "properties": {
+                    "menuitem": {
+                        "type": "integer"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": -32768
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "menuitem",
+                    "quantity",
+                    "user_id"
+                ]
+            },
+            "Group": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 150
+                    }
+                },
+                "required": [
+                    "name"
+                ]
+            },
+            "MenuItem": {
+                "type": "object",
+                "properties": {
+                    "item_id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "category": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "category",
+                    "item_id",
+                    "price",
+                    "title"
+                ]
+            },
+            "MenuItemDetail": {
+                "type": "object",
+                "properties": {
+                    "item_id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "category": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "featured": {
+                        "type": "boolean"
+                    },
+                    "calories": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": -2147483648,
+                        "nullable": true
+                    },
+                    "sugar_gm": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "protein_gm": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "carbohydrates_mg": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "saturated_fat_gm": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "contains_dairy": {
+                        "type": "boolean",
+                        "nullable": true
+                    },
+                    "contains_treenuts": {
+                        "type": "boolean",
+                        "nullable": true
+                    },
+                    "contains_gluten": {
+                        "type": "boolean",
+                        "nullable": true
+                    },
+                    "is_on_sale": {
+                        "type": "boolean",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "category",
+                    "item_id",
+                    "price",
+                    "title"
+                ]
+            },
+            "Order": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "status": {
+                        "type": "boolean"
+                    },
+                    "total": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "date": {
+                        "type": "string",
+                        "format": "date",
+                        "readOnly": true
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "user": {
+                        "type": "integer"
+                    },
+                    "delivery_crew": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "date",
+                    "id",
+                    "total",
+                    "user"
+                ]
+            },
+            "PaginatedMenuItemList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=200&limit=100"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MenuItem"
+                        }
+                    }
+                }
+            },
+            "PaginatedOrderList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=200&limit=100"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Order"
+                        }
+                    }
+                }
+            },
+            "PaginatedUserList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=200&limit=100"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/User"
+                        }
+                    }
+                }
+            },
+            "PasswordResetConfirm": {
+                "type": "object",
+                "properties": {
+                    "uid": {
+                        "type": "string"
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "new_password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "new_password",
+                    "token",
+                    "uid"
+                ]
+            },
+            "PatchedCart": {
+                "type": "object",
+                "properties": {
+                    "menuitem": {
+                        "type": "integer"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "maximum": 32767,
+                        "minimum": -32768
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    }
+                }
+            },
+            "PatchedMenuItemDetail": {
+                "type": "object",
+                "properties": {
+                    "item_id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "category": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true
+                    },
+                    "featured": {
+                        "type": "boolean"
+                    },
+                    "calories": {
+                        "type": "integer",
+                        "maximum": 2147483647,
+                        "minimum": -2147483648,
+                        "nullable": true
+                    },
+                    "sugar_gm": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "protein_gm": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "carbohydrates_mg": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "saturated_fat_gm": {
+                        "type": "number",
+                        "format": "double",
+                        "maximum": 10000,
+                        "minimum": -10000,
+                        "exclusiveMaximum": true,
+                        "exclusiveMinimum": true,
+                        "nullable": true
+                    },
+                    "contains_dairy": {
+                        "type": "boolean",
+                        "nullable": true
+                    },
+                    "contains_treenuts": {
+                        "type": "boolean",
+                        "nullable": true
+                    },
+                    "contains_gluten": {
+                        "type": "boolean",
+                        "nullable": true
+                    },
+                    "is_on_sale": {
+                        "type": "boolean",
+                        "nullable": true
+                    }
+                }
+            },
+            "PatchedUser": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email address",
+                        "maxLength": 254
+                    },
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "readOnly": true,
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only."
+                    }
+                }
+            },
+            "SendEmailReset": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": [
+                    "email"
+                ]
+            },
+            "SetPassword": {
+                "type": "object",
+                "properties": {
+                    "new_password": {
+                        "type": "string"
+                    },
+                    "current_password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "current_password",
+                    "new_password"
+                ]
+            },
+            "SetUsername": {
+                "type": "object",
+                "properties": {
+                    "current_password": {
+                        "type": "string"
+                    },
+                    "new_username": {
+                        "type": "string",
+                        "title": "Username",
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        "pattern": "^[\\w.@+-]+$",
+                        "maxLength": 150
+                    }
+                },
+                "required": [
+                    "current_password",
+                    "new_username"
+                ]
+            },
+            "TokenCreate": {
+                "type": "object",
+                "properties": {
+                    "password": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    }
+                }
+            },
+            "User": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Group"
+                        },
+                        "readOnly": true
+                    },
+                    "password": {
+                        "type": "string",
+                        "maxLength": 128
+                    },
+                    "last_login": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        "pattern": "^[\\w.@+-]+$",
+                        "maxLength": 150
+                    },
+                    "first_name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "maxLength": 150
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email address",
+                        "maxLength": 254
+                    },
+                    "date_joined": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "groups",
+                    "id",
+                    "password",
+                    "username"
+                ]
+            },
+            "UserCreate": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "title": "Email address",
+                        "maxLength": 254
+                    },
+                    "username": {
+                        "type": "string",
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        "pattern": "^[\\w.@+-]+$",
+                        "maxLength": 150
+                    },
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true
+                    }
+                },
+                "required": [
+                    "id",
+                    "password",
+                    "username"
+                ]
+            },
+            "UsernameResetConfirm": {
+                "type": "object",
+                "properties": {
+                    "new_username": {
+                        "type": "string",
+                        "title": "Username",
+                        "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                        "pattern": "^[\\w.@+-]+$",
+                        "maxLength": 150
+                    }
+                },
+                "required": [
+                    "new_username"
+                ]
+            }
+        },
+        "securitySchemes": {
+            "tokenAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Token-based authentication with required prefix \"Token\""
+            }
+        }
+    },
+    "externalDocs": {
+        "url": "https://www.postman.com/blackberry-py-dev/workspace/little-lemon-meta-apis-final-terry-brooks-jr/collection/20135114-623c0e98-b088-4bff-8ee7-f8d030294a09?action=share&source=copy-link&creator=20135114",
+        "description": "Postman Documentation and full API documentation Hub",
+        "SECURITY_DEFINITIONS": {
+            "TokenAuth": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Token-based authentication. Use 'Token <your_token>' format."
+            }
+        }
+    }
+}

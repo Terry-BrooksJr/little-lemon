@@ -1,19 +1,11 @@
 from django.urls import include, path, re_path
+from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
+                                   SpectacularSwaggerView)
 
-from LittleLemonAPI.views import (
-    CartManagement,
-    DeliveryCrewUserManagement,
-    ManagerUserManagement,
-    MenuItemDetailView,
-    MenuItemsListView,
-    OrderManagement,
-)
+from LittleLemonAPI.views import (CartManagement, DeliveryCrewUserManagement,
+                                  ManagerUserManagement, MenuItemDetailView,
+                                  MenuItemsListView, OrderManagement)
 
-from drf_spectacular.views import (
-    SpectacularAPIView,
-    SpectacularRedocView,
-    SpectacularSwaggerView,
-)
 urlpatterns = [
     re_path(r"^users/", include("djoser.urls")),
     re_path(r"^users/", include("djoser.urls.authtoken")),
@@ -44,7 +36,7 @@ urlpatterns = [
         OrderManagement.as_view(),
         name="Order-Detail-Management",
     ),
-    ]
+]
 
 
 urlpatterns += [

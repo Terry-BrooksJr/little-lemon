@@ -15,4 +15,3 @@ from django_bunny.storage import BunnyStorage
 class StaticStorage(BunnyStorage):
     location = "staticfiles"
     default_acl = "public-read"
-
