@@ -14,7 +14,6 @@ This project is developed as a final assignment for Meta's APIs course on Course
     - [Features](#features)
   - [Getting Started](#getting-started)
     - [Testing/Touring the Mock API](#testingtouring-the-mock-api)
-      - [_Which ever Method Selected, The Getting Started Steps are the Same_:](#which-ever-method-selected-the-getting-started-steps-are-the-same)
   - [API Documentation](#api-documentation)
   - [Authentication](#authentication)
       - [Example Header](#example-header)
