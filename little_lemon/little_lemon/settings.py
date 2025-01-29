@@ -177,7 +177,7 @@ DATABASES = {
         "CONN_MAX_AGE": 300,  # Keep connections alive for 5 minutes
         "CONN_HEALTH_CHECKS": True,  # Check
         "OPTIONS": {
-            "sslmode": "verify-full",
+            "sslmode": "require",
             "sslrootcert": os.environ["POSTGRES_CERT_FILE"],
         },
     }

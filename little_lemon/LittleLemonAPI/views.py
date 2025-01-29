@@ -19,7 +19,6 @@ from rest_framework.generics import (GenericAPIView, ListCreateAPIView,
 from rest_framework.mixins import DestroyModelMixin, UpdateModelMixin
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
-from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from little_lemon.utils.cache import CachedResponseMixin
@@ -29,7 +28,7 @@ from LittleLemonAPI.serializers import (CartSerializer,
                                         MenuItemSerializer, OrderSerializer,
                                         UserSerializer)
 
-
+    
 class APIRootView(RetrieveAPIView):
     queryset = None
     primary_model = None
@@ -247,7 +246,7 @@ class MenuItemsListView(CachedResponseMixin, ListCreateAPIView):
                 description="Filter menu items by whether they contain tree nuts (true/false).",
                 required=False,
                 type=bool,
-            ),
+            ),git 
             OpenApiParameter(
                 name="contains_gluten",
                 description="Filter menu items by whether they contain gluten (true/false).",

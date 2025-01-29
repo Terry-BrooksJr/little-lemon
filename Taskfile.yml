@@ -1,0 +1,93 @@
+version: '3'
+
+tasks:
+  start:
+    dir: little_lemon
+    desc: Start the Gunicorn server
+    cmds:
+      - doppler run -- gunicorn --workers {{.WORKERS}} --threads {{.THREADS}} --log-level {{.LOG_LEVEL | default "INFO"}} --env DJANGO_SETTINGS_MODULE=little_lemon.settings little_lemon.wsgi -b :{{.PORT}}
+
+  update-schema-from-models:
+    dir: little_lemon
+    desc: Generate Django migrations
+    cmds:
+      - doppler run -- python manage.py makemigrations
+    internal: true
+
+
+  update-db:
+    dir: little_lemon
+    desc: Apply Django migrations
+    deps: [update-schema-from-models]
+    cmds:
+      - doppler run -- python manage.py migrate
+    internal: false
+
+  dev-run:
+    dir: little_lemon 
+    desc: Run Django development server
+    cmds:
+      - doppler run -- python manage.py runserver {{.PORT | default "8000"}}
+
+  test:
+    dir: little_lemon
+    desc: Run Django tests
+    cmds:
+      - doppler run -- python manage.py test --keepdb
+
+  sync:
+    dir: little_lemon
+    desc: Sync poetry dependencies and update requirements.txt
+    cmds:
+      - |
+        if [ "{{.DRY_RUN}}" = "true" ]; then
+          doppler run -- poetry install --sync --dry-run
+        else
+          doppler run -- poetry install --sync
+        fi
+      - pip freeze > ../requirements.txt
+    generates:
+      - /Users/terry-brooks/Github/little-lemon/requirements.txt
+
+  uncache:
+    dir: little_lemon
+    desc: Invalidate Django cache
+    cmds:
+      - doppler run -- python manage.py invalidate_cachalot
+
+  build-docker-image:
+    desc: Build and push Docker image
+    internal: true
+    vars:
+      DOPPLER_TOKEN: '{{.DOPPLER_TOKEN | default (env "DOPPLER_TOKEN")}}'
+    cmds:
+      - >
+        docker buildx build --push -t little-lemon:latest
+        --file {{.FILE}}
+        --platform {{.PLATFORM | default "linux/amd64"}}
+        --build-arg=DOPPLER_TOKEN={{.DOPPLER_TOKEN}}
+        .
+
+  install-redis-cli:
+    desc: Install Redis CLI
+    internal: true
+    cmds:
+      - echo $SU | sudo -S npm install -g redis-cli
+
+  set-redis-users:
+    desc: Configure Redis users
+    deps: [install-redis-cli]
+    cmds:
+      # Note: The interactive Redis CLI command has been simplified as Task doesn't support
+      # the same type of interactive responders as Python's invoke
+      - rdcli -h {{.HOST}} -a {{.IDENTITY}} -p 6379
+      - echo "ACL SETUSER {{.USERNAME}} on >{{.PASSWORD}} allkeys +@all"
+
+  schema-check:
+    dir: little_lemon
+    desc: Check Django schema
+    cmds:
+      - doppler run -- python manage.py schema --check
+    generates:
+      - /Users/terry-brooks/Github/little-lemon/little_lemon/schema.json
+
